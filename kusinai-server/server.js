@@ -12,9 +12,30 @@ import scannerRoutes from "./routes/scanner.js";
 import adminRoutes from "./routes/admin.js";
 
 const app = express();
-app.use(cors());
+
+// ✅ Define allowed origins (local + deployed frontend)
+const allowedOrigins = [
+  "http://localhost:5173", 
+  "https://kusinai-duid5gxxc-hyuuna-rins-projects.vercel.app"
+];
+
+// ✅ CORS setup
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true, // allow cookies / tokens
+  })
+);
+
 app.use(express.json());
 
+// Routes
 app.use("/api/user", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/recipes", recipeRoutes);
@@ -23,9 +44,10 @@ app.use("/api/scanner", scannerRoutes);
 app.use("/api/admin", adminRoutes);
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI)
+mongoose
+  .connect(process.env.MONGODB_URI)
   .then(() => console.log("✅ MongoDB Connected"))
-  .catch(err => console.error("❌ MongoDB connection error:", err));
+  .catch((err) => console.error("❌ MongoDB connection error:", err));
 
 // Start server
 const PORT = process.env.PORT || 5000;
