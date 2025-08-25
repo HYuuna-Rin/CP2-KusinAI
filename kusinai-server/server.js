@@ -16,6 +16,7 @@ const app = express();
 // ✅ Define allowed origins (local + deployed frontend)
 const allowedOrigins = [
   "http://localhost:5173", 
+  "https://kusinai.vercel.app",
   "https://kusinai-duid5gxxc-hyuuna-rins-projects.vercel.app"
 ];
 
@@ -29,7 +30,9 @@ app.use(
         callback(new Error("Not allowed by CORS"));
       }
     },
-    credentials: true, // allow cookies / tokens
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
   })
 );
 
