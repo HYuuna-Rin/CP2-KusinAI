@@ -28,7 +28,8 @@ const SearchResults = () => {
     const fetchRecipesAndFavorites = async () => {
       try {
         const recipeRes = await axios.get("/api/recipes");
-        const recipes = Array.isArray(recipeRes.data) ? recipeRes.data : recipeRes.data.recipes || [];
+    const recipes = Array.isArray(recipeRes.data) ? recipeRes.data : recipeRes.data.recipes || [];
+    setAllRecipes(recipes);
         setAllRecipes(recipes);
 
         const token = localStorage.getItem("token") || sessionStorage.getItem("token");
@@ -61,7 +62,7 @@ const SearchResults = () => {
 
       setFavoriteIds(updatedFavorites);
       await axios.put(
-        "/api/auth/favorites",
+    `${BASE_URL}/auth/favorites`,
         { favorites: updatedFavorites },
         { headers: { Authorization: `Bearer ${token}` } }
       );

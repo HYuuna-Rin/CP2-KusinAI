@@ -1,2 +1,21 @@
-node_modules
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build
+dist/
+build/
+
+# Env files
 .env
+.env.local
+
+# IDE stuff
+.vscode/
+.DS_Store
+
+# Backups / accidental duplicates
+KusinAI-backup/
+KusinAI/KusinAI/
