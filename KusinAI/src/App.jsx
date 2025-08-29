@@ -16,6 +16,7 @@ import ManageRecipes from "./pages/ManageRecipes";
 import AddRecipe from "./pages/AddRecipe";
 import EditRecipe from "./pages/EditRecipe";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { BASE_URL } from "./Config";
 
 function App() {
   return (
@@ -45,5 +46,7 @@ function App() {
     </Router>
   );
 }
+
+console.log("[DEBUG] BASE_URL is:", BASE_URL);
 
 export default App;
