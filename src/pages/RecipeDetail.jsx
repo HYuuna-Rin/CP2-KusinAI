@@ -42,7 +42,7 @@ const RecipeDetail = () => {
     const fetchRecipe = async () => {
       try {
         const res = await axios.get(`/api/recipes/title/${title}`);
-      setRecipe(res.data);
+        setRecipe(res.data);
         fetchComments(res.data._id);
       } catch (err) {
         setError("Recipe not found.");
@@ -61,7 +61,7 @@ const RecipeDetail = () => {
   const fetchComments = async (recipeId) => {
     try {
       const res = await axios.get(`/api/recipes/${recipeId}/comments`);
-    setComments(res.data);
+      setComments(res.data);
     } catch (err) {
       console.error("Error fetching comments:", err);
     }
@@ -72,7 +72,7 @@ const RecipeDetail = () => {
     try {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
       const res = await axios.post(
-    `${BASE_URL}/recipes/${recipe._id}/comments`,
+        `/api/recipes/${recipe._id}/comments`,
         { comment: commentText },
         { headers: { Authorization: `Bearer ${token}` } }
       );

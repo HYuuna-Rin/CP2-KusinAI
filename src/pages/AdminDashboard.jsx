@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { BASE_URL } from "../Config.js";
 import MainLayout from "../components/MainLayout";
 import PageTransition from "../components/PageTransition";
 import { FiTrash2, FiEdit, FiPlus } from "react-icons/fi";
@@ -27,7 +26,7 @@ const AdminDashboard = () => {
   // Fetch all recipes
   const fetchRecipes = async () => {
     try {
-      const res = await axios.get(`${BASE_URL}/recipes`);
+      const res = await axios.get("/api/recipes");
       setRecipes(res.data);
     } catch (err) {
       console.error("❌ Error fetching recipes:", err);
@@ -38,7 +37,7 @@ const AdminDashboard = () => {
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-      const res = await axios.get(`${BASE_URL}/admin/stats`, {
+      const res = await axios.get("/api/admin/stats", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setStats(res.data);
@@ -62,7 +61,7 @@ const AdminDashboard = () => {
         steps: newRecipe.steps.split("\n").map((s) => s.trim()).filter(Boolean),
       };
 
-      await axios.post(`${BASE_URL}/recipes`, formattedRecipe, {
+      await axios.post("/api/recipes", formattedRecipe, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -78,7 +77,7 @@ const AdminDashboard = () => {
   const confirmDeleteRecipe = async () => {
     try {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-      await axios.delete(`${BASE_URL}/recipes/${deleteId}`, {
+      await axios.delete(`/api/recipes/${deleteId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setDeleteModal(false);

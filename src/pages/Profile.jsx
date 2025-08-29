@@ -33,7 +33,7 @@ const Profile = () => {
       if (savedImage) setProfileImage(savedImage);
 
       fetch("/api/auth/notes", {
-    method: "GET",
+        method: "GET",
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((res) => res.json())
@@ -81,7 +81,7 @@ const Profile = () => {
     if (!token) return;
 
     fetch("/api/auth/notes", {
-  method: "PUT",
+      method: "PUT",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
@@ -115,7 +115,7 @@ const Profile = () => {
     try {
       const updatedFavorites = favorites.filter((r) => r._id !== recipeIdToRemove);
       await axios.put(
-    `${BASE_URL}/auth/favorites`,
+        "/api/auth/favorites",
         { favorites: updatedFavorites.map((r) => r._id) },
         { headers: { Authorization: `Bearer ${token}` } }
       );
