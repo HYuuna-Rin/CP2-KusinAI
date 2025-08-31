@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { FaRegStar, FaStar, FaComments } from "react-icons/fa";
 import axios from "axios";
+
+const API_URL = import.meta.env.VITE_API_URL;
 import PageTransition from "../components/PageTransition";
 import MainLayout from "../components/MainLayout";
 
@@ -27,13 +29,13 @@ const SearchResults = () => {
   useEffect(() => {
     const fetchRecipesAndFavorites = async () => {
       try {
-        const recipeRes = await axios.get("/api/recipes");
+  const recipeRes = await axios.get(`${API_URL}/api/recipes`);
         const recipes = Array.isArray(recipeRes.data) ? recipeRes.data : recipeRes.data.recipes || [];
         setAllRecipes(recipes);
 
         const token = localStorage.getItem("token") || sessionStorage.getItem("token");
         if (token) {
-          const favoritesRes = await axios.get("/api/auth/favorites", {
+          const favoritesRes = await axios.get(`${API_URL}/api/auth/favorites`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           const validFavorites = (favoritesRes.data.favorites || []).filter(r => r && r._id);
@@ -61,7 +63,7 @@ const SearchResults = () => {
 
       setFavoriteIds(updatedFavorites);
       await axios.put(
-        "/api/auth/favorites",
+        `${API_URL}/api/auth/favorites`,
         { favorites: updatedFavorites },
         { headers: { Authorization: `Bearer ${token}` } }
       );

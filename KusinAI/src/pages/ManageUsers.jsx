@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+
+const API_URL = import.meta.env.VITE_API_URL;
 import MainLayout from "../components/MainLayout";
 
 const ManageUsers = () => {
@@ -8,7 +10,7 @@ const ManageUsers = () => {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-      const res = await axios.get("/api/admin/users", {
+  const res = await axios.get(`${API_URL}/api/admin/users`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(res.data);
@@ -24,7 +26,7 @@ const ManageUsers = () => {
   const toggleBan = async (id) => {
     try {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-      await axios.put(`/api/admin/users/${id}/toggle-ban`, {}, {
+  await axios.put(`${API_URL}/api/admin/users/${id}/toggle-ban`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchUsers();
@@ -37,7 +39,7 @@ const ManageUsers = () => {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
     try {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-      await axios.delete(`/api/admin/users/${id}`, {
+  await axios.delete(`${API_URL}/api/admin/users/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchUsers();

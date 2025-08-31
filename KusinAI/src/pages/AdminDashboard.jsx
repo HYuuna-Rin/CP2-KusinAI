@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+
+const API_URL = import.meta.env.VITE_API_URL;
 import MainLayout from "../components/MainLayout";
 import PageTransition from "../components/PageTransition";
 import { FiTrash2, FiEdit, FiPlus } from "react-icons/fi";

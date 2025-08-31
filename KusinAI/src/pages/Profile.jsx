@@ -4,6 +4,8 @@ import { Link, useNavigate } from "react-router-dom";
 import PageTransition from "../components/PageTransition";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
+
+const API_URL = import.meta.env.VITE_API_URL;
 import MainLayout from "../components/MainLayout";
 
 const Profile = () => {
@@ -32,7 +34,7 @@ const Profile = () => {
       const savedImage = localStorage.getItem(`image_${decoded.name}`);
       if (savedImage) setProfileImage(savedImage);
 
-      fetch("/api/auth/notes", {
+  fetch(`${API_URL}/api/auth/notes`, {
         method: "GET",
         headers: { Authorization: `Bearer ${token}` },
       })
@@ -42,7 +44,7 @@ const Profile = () => {
         })
         .catch((err) => console.error("❌ Failed to fetch notes:", err));
 
-      fetch("/api/recipes")
+  fetch(`${API_URL}/api/recipes`)
         .then((res) => res.json())
         .then((recipes) => {
           const userComments = [];
@@ -61,7 +63,7 @@ const Profile = () => {
         .catch((err) => console.error("❌ Failed to fetch comments:", err));
 
       axios
-        .get("/api/auth/favorites", {
+  .get(`${API_URL}/api/auth/favorites`, {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((res) => {
@@ -80,7 +82,7 @@ const Profile = () => {
     const token = localStorage.getItem("token") || sessionStorage.getItem("token");
     if (!token) return;
 
-    fetch("/api/auth/notes", {
+  fetch(`${API_URL}/api/auth/notes`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -115,7 +117,7 @@ const Profile = () => {
     try {
       const updatedFavorites = favorites.filter((r) => r._id !== recipeIdToRemove);
       await axios.put(
-        "/api/auth/favorites",
+        `${API_URL}/api/auth/favorites`,
         { favorites: updatedFavorites.map((r) => r._id) },
         { headers: { Authorization: `Bearer ${token}` } }
       );

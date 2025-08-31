@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+
+const API_URL = import.meta.env.VITE_API_URL;
 import { useNavigate } from "react-router-dom";
 import MainLayout from "../components/MainLayout";
 
@@ -9,7 +11,7 @@ const ManageRecipes = () => {
 
   const fetchRecipes = async () => {
     try {
-      const res = await axios.get("/api/recipes");
+  const res = await axios.get(`${API_URL}/api/recipes`);
       setRecipes(res.data);
     } catch (err) {
       console.error("❌ Failed to fetch recipes:", err);
@@ -24,7 +26,7 @@ const ManageRecipes = () => {
     if (!window.confirm("Are you sure you want to delete this recipe?")) return;
     try {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-      await axios.delete(`/api/admin/recipes/${id}`, {
+  await axios.delete(`${API_URL}/api/admin/recipes/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchRecipes();

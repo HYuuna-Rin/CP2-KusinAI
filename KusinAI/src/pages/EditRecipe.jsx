@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+
+const API_URL = import.meta.env.VITE_API_URL;
 import { useNavigate, useParams } from "react-router-dom";
 import MainLayout from "../components/MainLayout";
 
@@ -14,7 +16,7 @@ const EditRecipe = () => {
   useEffect(() => {
     const fetchRecipe = async () => {
       try {
-        const res = await axios.get(`/api/recipes/${id}`);
+  const res = await axios.get(`${API_URL}/api/recipes/${id}`);
         setTitle(res.data.title);
         setRegion(res.data.region);
         setIngredients(res.data.ingredients.join(", "));
@@ -31,7 +33,7 @@ const EditRecipe = () => {
     try {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
       await axios.put(
-        `/api/admin/recipes/${id}`,
+        `${API_URL}/api/admin/recipes/${id}`,
         { title, region, ingredients: ingredients.split(","), instructions },
         { headers: { Authorization: `Bearer ${token}` } }
       );

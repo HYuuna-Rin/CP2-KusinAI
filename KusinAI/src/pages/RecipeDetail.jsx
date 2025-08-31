@@ -6,6 +6,8 @@ import PageTransition from "../components/PageTransition";
 import MainLayout from "../components/MainLayout";
 import FloatingChatBot from "../components/FloatingChatBot";
 import axios from "axios";
+
+const API_URL = import.meta.env.VITE_API_URL;
 import { jwtDecode } from "jwt-decode";
 
 const RecipeDetail = () => {
@@ -41,7 +43,7 @@ const RecipeDetail = () => {
   useEffect(() => {
     const fetchRecipe = async () => {
       try {
-        const res = await axios.get(`/api/recipes/title/${title}`);
+  const res = await axios.get(`${API_URL}/api/recipes/title/${title}`);
         setRecipe(res.data);
         fetchComments(res.data._id);
       } catch (err) {
@@ -60,7 +62,7 @@ const RecipeDetail = () => {
 
   const fetchComments = async (recipeId) => {
     try {
-      const res = await axios.get(`/api/recipes/${recipeId}/comments`);
+  const res = await axios.get(`${API_URL}/api/recipes/${recipeId}/comments`);
       setComments(res.data);
     } catch (err) {
       console.error("Error fetching comments:", err);
@@ -72,7 +74,7 @@ const RecipeDetail = () => {
     try {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
       const res = await axios.post(
-        `/api/recipes/${recipe._id}/comments`,
+        `${API_URL}/api/recipes/${recipe._id}/comments`,
         { comment: commentText },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -88,7 +90,7 @@ const RecipeDetail = () => {
       if (!replyText[commentId]?.trim()) return;
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
       await axios.post(
-        `/api/recipes/${recipe._id}/comments/${commentId}/replies`,
+        `${API_URL}/api/recipes/${recipe._id}/comments/${commentId}/replies`,
         { comment: replyText[commentId] },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -117,7 +119,7 @@ const RecipeDetail = () => {
     try {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
       await axios.post(
-        `/api/recipes/${recipe._id}/comments/${commentId}/replies/${replyId}/like`,
+        `${API_URL}/api/recipes/${recipe._id}/comments/${commentId}/replies/${replyId}/like`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -131,7 +133,7 @@ const RecipeDetail = () => {
     try {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
       await axios.put(
-        `/api/recipes/${recipe._id}/comments/${commentId}`,
+        `${API_URL}/api/recipes/${recipe._id}/comments/${commentId}`,
         { comment: newText },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -161,12 +163,12 @@ const RecipeDetail = () => {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
       const { type, commentId, replyId } = deleteTarget;
       if (type === "comment") {
-        await axios.delete(`/api/recipes/${recipe._id}/comments/${commentId}`, {
+  await axios.delete(`${API_URL}/api/recipes/${recipe._id}/comments/${commentId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
       } else if (type === "reply") {
         await axios.delete(
-          `/api/recipes/${recipe._id}/comments/${commentId}/replies/${replyId}`,
+          `${API_URL}/api/recipes/${recipe._id}/comments/${commentId}/replies/${replyId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
       }
@@ -182,7 +184,7 @@ const RecipeDetail = () => {
     try {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
       await axios.put(
-        `/api/recipes/${recipe._id}/comments/${commentId}/replies/${replyId}`,
+        `${API_URL}/api/recipes/${recipe._id}/comments/${commentId}/replies/${replyId}`,
         { comment: newText },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -237,7 +239,7 @@ const RecipeDetail = () => {
         steps: editForm.steps.split("\n").map((s) => s.trim()).filter(Boolean),
       };
 
-      await axios.put(`/api/recipes/${recipe._id}`, updatedRecipe, {
+  await axios.put(`${API_URL}/api/recipes/${recipe._id}`, updatedRecipe, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -252,7 +254,7 @@ const RecipeDetail = () => {
   const confirmDeleteRecipe = async () => {
     try {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-      await axios.delete(`/api/recipes/${recipe._id}`, {
+  await axios.delete(`${API_URL}/api/recipes/${recipe._id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setDeleteRecipeModal(false);
