@@ -31,8 +31,14 @@ const Profile = () => {
       setEmail(decoded.email || "N/A");
       setUserId(decoded.id);
 
-      const savedImage = localStorage.getItem(`image_${decoded.name}`);
-      if (savedImage) setProfileImage(savedImage);
+      // Fetch user profile from backend to get global profile image
+      axios.get(`${API_URL}/api/user/profile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => {
+          if (res.data.profileImage) setProfileImage(res.data.profileImage);
+        })
+        .catch(() => {});
 
   fetch(`${API_URL}/api/auth/notes`, {
         method: "GET",
@@ -104,9 +110,19 @@ const Profile = () => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
+      reader.onloadend = async () => {
         setProfileImage(reader.result);
-        localStorage.setItem(`image_${username}`, reader.result);
+        // Upload to backend
+        const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+        try {
+          await axios.put(
+            `${API_URL}/api/user/profile`,
+            { profileImage: reader.result },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+        } catch (err) {
+          console.error("❌ Failed to upload profile image:", err);
+        }
       };
       reader.readAsDataURL(file);
     }

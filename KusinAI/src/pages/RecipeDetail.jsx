@@ -19,7 +19,7 @@ const RecipeDetail = () => {
   const [recipe, setRecipe] = useState(null);
   const [comments, setComments] = useState([]);
   const [error, setError] = useState("");
-  const [user, setUser] = useState({});
+  const [user, setUser] = useState(null);
 
   // comment/reply states
   const [commentText, setCommentText] = useState("");
@@ -43,7 +43,7 @@ const RecipeDetail = () => {
   useEffect(() => {
     const fetchRecipe = async () => {
       try {
-  const res = await axios.get(`${API_URL}/api/recipes/title/${title}`);
+        const res = await axios.get(`${API_URL}/api/recipes/title/${title}`);
         setRecipe(res.data);
         fetchComments(res.data._id);
       } catch (err) {
@@ -53,8 +53,13 @@ const RecipeDetail = () => {
 
     const token = localStorage.getItem("token") || sessionStorage.getItem("token");
     if (token) {
-      const decoded = jwtDecode(token);
-      setUser({ id: decoded.id, name: decoded.name, role: decoded.role });
+      try {
+        const decoded = jwtDecode(token);
+        setUser({ id: decoded.id, name: decoded.name, role: decoded.role });
+      } catch (err) {
+        console.error("Invalid token:", err);
+        setUser(null);
+      }
     }
 
     fetchRecipe();
@@ -62,14 +67,14 @@ const RecipeDetail = () => {
 
   const fetchComments = async (recipeId) => {
     try {
-  const res = await axios.get(`${API_URL}/api/recipes/${recipeId}/comments`);
+      const res = await axios.get(`${API_URL}/api/recipes/${recipeId}/comments`);
       setComments(res.data);
     } catch (err) {
       console.error("Error fetching comments:", err);
     }
   };
 
-  // === COMMENT & REPLY LOGIC (same as before) ===
+  // === COMMENT & REPLY LOGIC ===
   const handlePostComment = async () => {
     try {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
@@ -105,7 +110,7 @@ const RecipeDetail = () => {
     try {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
       await axios.post(
-        `/api/recipes/${recipe._id}/comments/${commentId}/like`,
+        `${API_URL}/api/recipes/${recipe._id}/comments/${commentId}/like`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -137,8 +142,9 @@ const RecipeDetail = () => {
         { comment: newText },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      fetchComments(recipe._id);
       setEditingCommentId(null);
+      setEditingReply({});
+      fetchComments(recipe._id);
     } catch (err) {
       console.error("❌ Error editing comment:", err);
     }
@@ -163,9 +169,8 @@ const RecipeDetail = () => {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
       const { type, commentId, replyId } = deleteTarget;
       if (type === "comment") {
-  await axios.delete(`${API_URL}/api/recipes/${recipe._id}/comments/${commentId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await axios.delete(`${API_URL}/api/recipes/${recipe._id}/comments/${commentId}`,
+          { headers: { Authorization: `Bearer ${token}` } });
       } else if (type === "reply") {
         await axios.delete(
           `${API_URL}/api/recipes/${recipe._id}/comments/${commentId}/replies/${replyId}`,
@@ -174,6 +179,8 @@ const RecipeDetail = () => {
       }
       setModalOpen(false);
       setDeleteTarget({ type: "", commentId: null, replyId: null });
+      setEditingCommentId(null);
+      setEditingReply({});
       fetchComments(recipe._id);
     } catch (err) {
       console.error("❌ Error deleting:", err);
@@ -188,8 +195,9 @@ const RecipeDetail = () => {
         { comment: newText },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      setEditingReply((prev) => ({ ...prev, [replyId]: false }));
+      setEditingCommentId(null);
       fetchComments(recipe._id);
-      setEditingReply((prev) => ({ ...prev, [replyId]: null }));
     } catch (err) {
       console.error("❌ Error editing reply:", err);
     }
@@ -239,7 +247,7 @@ const RecipeDetail = () => {
         steps: editForm.steps.split("\n").map((s) => s.trim()).filter(Boolean),
       };
 
-  await axios.put(`${API_URL}/api/recipes/${recipe._id}`, updatedRecipe, {
+      await axios.put(`${API_URL}/api/recipes/${recipe._id}`, updatedRecipe, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -254,7 +262,7 @@ const RecipeDetail = () => {
   const confirmDeleteRecipe = async () => {
     try {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-  await axios.delete(`${API_URL}/api/recipes/${recipe._id}`, {
+      await axios.delete(`${API_URL}/api/recipes/${recipe._id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setDeleteRecipeModal(false);
@@ -285,7 +293,7 @@ const RecipeDetail = () => {
           )}
           <div className="flex justify-between items-center">
             <h1 className="text-3xl font-bold">{recipe.title}</h1>
-            {user.role === "admin" && (
+            {user?.role === "admin" && (
               <div className="flex gap-2">
                 <button
                   onClick={openEditRecipe}
@@ -348,13 +356,13 @@ const RecipeDetail = () => {
                       alt="Profile"
                       className="w-6 h-6 rounded-full object-cover border border-gray-300 cursor-pointer"
                       onClick={() => navigate(
-                        user.id === com.userId ? "/profile" : `/profile/${com.userId}`
+                        user?.id === com.userId ? "/profile" : `/profile/${com.userId}`
                       )}
                     />
                     <span
                       className="font-semibold ml-2 hover:underline cursor-pointer"
                       onClick={() => navigate(
-                        user.id === com.userId ? "/profile" : `/profile/${com.userId}`
+                        user?.id === com.userId ? "/profile" : `/profile/${com.userId}`
                       )}
                     >
                       {com.username}
@@ -374,9 +382,7 @@ const RecipeDetail = () => {
                         }
                         onChange={(e) => {
                           const updated = comments.map((c) =>
-                            c._id === com._id
-                              ? { ...c, comment: e.target.value }
-                              : c
+                            c._id === com._id ? { ...c, comment: e.target.value } : c
                           );
                           setComments(updated);
                         }}
@@ -398,21 +404,21 @@ const RecipeDetail = () => {
                   ) : (
                     <p className="mb-2">{com.comment}</p>
                   )}
-
+                  
                   <div className="flex flex-col gap-1 text-sm text-gray-600 mt-2">
                     <div className="flex items-center gap-4">
                       <button
                         onClick={() => handleLike(com._id)}
-                        className={`flex items-center gap-1 ${com.likes && com.likes.includes(user.id) ? 'text-red-500' : 'hover:text-red-500'}`}
-                        aria-label={com.likes && com.likes.includes(user.id) ? 'Unlike' : 'Like'}
+                        className={`flex items-center gap-1 ${com.likes && user && com.likes.includes(user.id) ? 'text-red-500' : 'hover:text-red-500'}`}
+                        aria-label={com.likes && user && com.likes.includes(user.id) ? 'Unlike' : 'Like'}
                       >
-                        {com.likes && com.likes.includes(user.id) ? <FaHeart /> : <FaRegHeart />}
+                        {com.likes && user && com.likes.includes(user.id) ? <FaHeart /> : <FaRegHeart />}
                         {com.likes?.length || 0}
                       </button>
                       <button onClick={() => setReplyText((prev) => ({ ...prev, [com._id]: "" }))}>
                         Reply
                       </button>
-                      {(com.userId === user.id || user.role === "admin") && ( // ✅ admin override
+                      {user && (com.userId === user.id || user.role === "admin") && (
                         <>
                           <button onClick={() => setEditingCommentId(com._id)}><FiEdit /></button>
                           <button onClick={() => handleDeleteComment(com._id)}><FiTrash2 /></button>
@@ -458,6 +464,7 @@ const RecipeDetail = () => {
                     </div>
                   )}
 
+                  {/* REPLIES SECTION */}
                   {com.replies?.length > 0 && (
                     <div className="mt-3 ml-6 space-y-2 text-sm text-gray-700">
                       {com.replies.map((reply) => (
@@ -468,13 +475,13 @@ const RecipeDetail = () => {
                               alt="Profile"
                               className="w-5 h-5 rounded-full object-cover border border-gray-300 cursor-pointer"
                               onClick={() => navigate(
-                                user.id === reply.userId ? "/profile" : `/profile/${reply.userId}`
+                                user?.id === reply.userId ? "/profile" : `/profile/${reply.userId}`
                               )}
                             />
                             <span
                               className="font-semibold hover:underline cursor-pointer"
                               onClick={() => navigate(
-                                user.id === reply.userId ? "/profile" : `/profile/${reply.userId}`
+                                user?.id === reply.userId ? "/profile" : `/profile/${reply.userId}`
                               )}
                             >
                               {reply.username}
@@ -535,21 +542,19 @@ const RecipeDetail = () => {
                                 <div className="flex items-center gap-4 text-xs text-gray-600">
                                   <button
                                     onClick={() => handleLikeReply(com._id, reply._id)}
-                                    className={`flex items-center gap-1 ${reply.likes && reply.likes.includes(user.id) ? 'text-red-500' : 'hover:text-red-500'}`}
-                                    aria-label={reply.likes && reply.likes.includes(user.id) ? 'Unlike' : 'Like'}
+                                    className={`flex items-center gap-1 ${reply.likes && user && reply.likes.includes(user.id) ? 'text-red-500' : 'hover:text-red-500'}`}
+                                    aria-label={reply.likes && user && reply.likes.includes(user.id) ? 'Unlike' : 'Like'}
                                   >
-                                    {reply.likes && reply.likes.includes(user.id) ? <FaHeart /> : <FaRegHeart />}
+                                    {reply.likes && user && reply.likes.includes(user.id) ? <FaHeart /> : <FaRegHeart />}
                                     {reply.likes?.length || 0}
                                   </button>
                                   <button onClick={() => setReplyText((prev) => ({ ...prev, [com._id]: `@${reply.username} ` }))}>
                                     Reply
                                   </button>
-                                  {(reply.userId === user.id || user.role === "admin") && ( // ✅ admin override
-                                    <>
-                                      <button onClick={() => setEditingReply((prev) => ({ ...prev, [reply._id]: true }))} className="text-blue-600 ml-2">Edit</button>
-                                      <button onClick={() => handleDeleteReply(com._id, reply._id)} className="text-red-600 ml-2">Delete</button>
-                                    </>
-                                  )}
+                                  <>
+                                    <button onClick={() => setEditingReply((prev) => ({ ...prev, [reply._id]: true }))} className="text-blue-600 ml-2">Edit</button>
+                                    <button onClick={() => handleDeleteReply(com._id, reply._id)} className="text-red-600 ml-2">Delete</button>
+                                  </>
                                 </div>
                               </>
                             )}
@@ -561,6 +566,7 @@ const RecipeDetail = () => {
                 </div>
               ))}
             </div>
+
           </div>
         </div>
 
