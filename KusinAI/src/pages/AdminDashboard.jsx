@@ -143,7 +143,7 @@ const AdminDashboard = () => {
               </tr>
             </thead>
             <tbody>
-              {recipes.map((r) => (
+              {Array.isArray(recipes) && recipes.map((r) => (
                 <tr key={r._id} className="hover:bg-gray-50">
                   <td className="p-2 border border-gray-300">
                     <span
@@ -173,7 +173,7 @@ const AdminDashboard = () => {
                   </td>
                 </tr>
               ))}
-              {recipes.length === 0 && (
+              {Array.isArray(recipes) && recipes.length === 0 && (
                 <tr>
                   <td colSpan="3" className="text-center p-4 text-gray-500">
                     No recipes found.
