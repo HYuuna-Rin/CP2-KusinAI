@@ -70,7 +70,7 @@ const AdminDashboard = () => {
         steps: newRecipe.steps.split("\n").map((s) => s.trim()).filter(Boolean),
       };
 
-      await axios.post("/api/recipes", formattedRecipe, {
+      await axios.post(`${API_URL}/api/recipes`, formattedRecipe, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -86,7 +86,7 @@ const AdminDashboard = () => {
   const confirmDeleteRecipe = async () => {
     try {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-      await axios.delete(`/api/recipes/${deleteId}`, {
+      await axios.delete(`${API_URL}/api/recipes/${deleteId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setDeleteModal(false);
