@@ -28,10 +28,11 @@ const AdminDashboard = () => {
   // Fetch all recipes
   const fetchRecipes = async () => {
     try {
-      const res = await axios.get("/api/recipes");
-      setRecipes(res.data);
+      const res = await axios.get(`${API_URL}/api/recipes`);
+      setRecipes(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("❌ Error fetching recipes:", err);
+      setRecipes([]);
     }
   };
 
@@ -39,12 +40,18 @@ const AdminDashboard = () => {
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-      const res = await axios.get("/api/admin/stats", {
+      const res = await axios.get(`${API_URL}/api/admin/stats`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setStats(res.data);
+      setStats({
+        totalUsers: res.data?.totalUsers || 0,
+        totalRecipes: res.data?.totalRecipes || 0,
+        totalComments: res.data?.totalComments || 0,
+        totalReplies: res.data?.totalReplies || 0,
+      });
     } catch (err) {
       console.error("❌ Error fetching stats:", err);
+      setStats({ totalUsers: 0, totalRecipes: 0, totalComments: 0, totalReplies: 0 });
     }
   };
 
