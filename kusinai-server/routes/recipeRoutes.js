@@ -336,4 +336,23 @@ router.post("/", async (req, res) => {
   }
 });
 
+// Edit a recipe by ID (admin only)
+router.put("/:id", authenticateToken, async (req, res) => {
+  try {
+    // Only allow admin
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+    const updatedRecipe = await Recipe.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    if (!updatedRecipe) return res.status(404).json({ message: "Recipe not found" });
+    res.json(updatedRecipe);
+  } catch (err) {
+    res.status(500).json({ message: "Error updating recipe" });
+  }
+});
+
 export default router;
