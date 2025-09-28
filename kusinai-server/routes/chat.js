@@ -1,16 +1,20 @@
 // routes/chat.js
 import express from "express";
 import dotenv from "dotenv";
+import OpenAI from "openai";
 import { authenticateToken } from "./auth.js";
 
 dotenv.config();
 const router = express.Router();
 
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
 // In-memory session chat store (keyed by user + recipe)
 const sessionChats = {};
 
-// 🚫 MOCK GPT INSTEAD OF REAL API
-router.post("/chat/:recipeId", authenticateToken, async (req, res) => {
+router.post("/:recipeId", authenticateToken, async (req, res) => {
   try {
     const { recipeId } = req.params;
     const { message, recipeContext } = req.body;
@@ -18,25 +22,44 @@ router.post("/chat/:recipeId", authenticateToken, async (req, res) => {
 
     const sessionKey = `${userId}_${recipeId}`;
     if (!sessionChats[sessionKey]) {
-      sessionChats[sessionKey] = [];
+      sessionChats[sessionKey] = [
+        {
+          role: "system",
+          content: `You are KusinAI, a helpful cooking assistant. 
+Only answer questions related to recipes, nutritional values, 
+dietary suggestions, and cooking methods. 
+Keep responses clear, structured, and complete (do not cut off mid-sentence). 
+If the user asks something unrelated, politely decline and guide them back to food.`,
+        },
+        {
+          role: "user",
+          content: `Recipe context:\n${recipeContext || "General cooking knowledge"}`,
+        },
+      ];
     }
 
-    // Store user message in history
-    sessionChats[sessionKey].push({ sender: "user", content: message });
+    // Add user message
+    sessionChats[sessionKey].push({ role: "user", content: message });
 
-    // Simulate GPT reply
-    const mockReply = {
-      sender: "bot",
-      content: `🧠 [MockGPT] Here's a helpful response to: "${message}" related to recipe "${recipeContext.slice(0, 50)}..."`,
-    };
+    console.log("✅ Using GPT route:", message);
 
-    // Store bot reply
-    sessionChats[sessionKey].push(mockReply);
+    // Call OpenAI
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: sessionChats[sessionKey],
+      max_tokens: 1200,
+      temperature: 0.7,
+    });
 
-    res.json({ reply: mockReply.content });
+    const reply = completion.choices[0].message.content;
+
+    // Save assistant reply
+    sessionChats[sessionKey].push({ role: "assistant", content: reply });
+
+    res.json({ reply });
   } catch (err) {
-    console.error("❌ Mock GPT chat error:", err);
-    res.status(500).json({ error: "Mock chat request failed." });
+    console.error("❌ GPT chat error:", err);
+    res.status(500).json({ error: "Chat request failed." });
   }
 });
 

@@ -1,82 +1,129 @@
-import React, { useState } from "react";
-import { FaComments, FaTimes } from "react-icons/fa";
+// src/components/FloatingChatBot.jsx
+import React, { useState, useRef, useEffect } from "react";
+import axios from "axios";
+import { FiMessageCircle, FiX } from "react-icons/fi";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
-const FloatingChatBot = ({ recipeId, recipeTitle, recipeContext }) => {
+const API_URL = import.meta.env.VITE_API_URL;
+
+const FloatingChatBot = ({ recipe }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [isThinking, setIsThinking] = useState(false);
+  const chatEndRef = useRef(null);
 
-  const toggleChat = () => setIsOpen(!isOpen);
+  const scrollToBottom = () => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isThinking]);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
 
-    const newMessages = [...messages, { sender: "user", text: input }];
-    setMessages(newMessages);
-    setInput("");
-    setLoading(true);
+    const userMessage = { sender: "user", text: input };
+    setMessages((prev) => [...prev, userMessage]);
+    setIsThinking(true);
 
     try {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-
-      const res = await fetch(`/api/chat/${recipeId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
+      const res = await axios.post(
+        `${API_URL}/api/chat/${recipe?._id || "general"}`,
+        {
           message: input,
-          recipeContext,
-        }),
-      });
+          recipeContext: recipe
+            ? `Title: ${recipe.title}\nIngredients: ${recipe.ingredients?.join(", ")}\nSteps: ${recipe.steps?.join(", ")}`
+            : "General cooking knowledge",
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-      const data = await res.json();
-      setMessages((prev) => [...prev, { sender: "bot", text: data.reply }]);
+      const botMessage = { sender: "bot", text: res.data.reply };
+      setMessages((prev) => [...prev, botMessage]);
     } catch (err) {
-      console.error("Error talking to chatbot:", err);
-      setMessages((prev) => [...prev, { sender: "bot", text: "Sorry, something went wrong." }]);
+      console.error("❌ Chatbot error:", err);
+      setMessages((prev) => [
+        ...prev,
+        { sender: "bot", text: "Sorry, I had trouble processing that request." },
+      ]);
     } finally {
-      setLoading(false);
+      setIsThinking(false);
     }
+
+    setInput("");
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-4 right-4 z-50">
       {isOpen ? (
-        <div className="bg-white shadow-lg rounded-lg w-80 h-96 flex flex-col">
-          <div className="bg-orange-500 text-white flex justify-between items-center p-3 rounded-t-lg">
-            <span>Ask KusinAI</span>
-            <FaTimes className="cursor-pointer" onClick={toggleChat} />
+        <div className="w-80 h-96 bg-white rounded-2xl shadow-2xl flex flex-col border border-gray-200 overflow-hidden">
+          {/* Header */}
+          <div className="flex justify-between items-center bg-yellow-500 text-white px-4 py-2">
+            <h2 className="font-bold">KusinAI Assistant</h2>
+            <button onClick={() => setIsOpen(false)}>
+              <FiX size={20} />
+            </button>
           </div>
-          <div className="flex-1 p-3 overflow-y-auto space-y-2 bg-gray-50">
+
+          {/* Chat messages */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
             {messages.map((msg, idx) => (
               <div
                 key={idx}
-                className={`p-2 rounded-lg max-w-xs ${
-                  msg.sender === "user"
-                    ? "bg-orange-100 self-end text-right"
-                    : "bg-gray-200 self-start"
-                }`}
+                className={`flex transition-all duration-300 ${msg.sender === "user" ? "justify-end animate-slideInRight" : "justify-start animate-slideInLeft"
+                  }`}
               >
-                {msg.text}
+                <div
+                  key={idx}
+                  className={`p-2 rounded prose max-w-full ${msg.sender === "user"
+                      ? "bg-yellow-100 self-end text-right"
+                      : "bg-gray-50 self-start text-left"
+                    }`}
+                >
+                  {msg.sender === "bot" ? (
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.text}</ReactMarkdown>
+                  ) : (
+                    msg.text
+                  )}
+                </div>
               </div>
             ))}
-            {loading && <div className="text-gray-500 text-sm">Typing...</div>}
+
+            {/* Thinking indicator (typing dots) */}
+            {isThinking && (
+              <div className="flex justify-start animate-slideInLeft">
+                <div className="px-3 py-2 rounded-lg bg-white border text-gray-500 text-sm flex items-center gap-1 shadow">
+                  <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></span>
+                  <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-150"></span>
+                  <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-300"></span>
+                </div>
+              </div>
+            )}
+
+            <div ref={chatEndRef} />
           </div>
-          <div className="p-2 flex gap-2 border-t">
+
+          {/* Input area */}
+          <div className="p-3 bg-white border-t flex gap-2">
             <input
               type="text"
-              className="flex-1 border rounded px-2 py-1"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-              placeholder="Ask something..."
+              className="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              placeholder="Ask about this recipe..."
             />
             <button
-              className="bg-orange-500 hover:bg-orange-600 text-white px-3 rounded"
               onClick={sendMessage}
+              disabled={isThinking}
+              className={`px-4 py-2 rounded-lg text-sm shadow ${isThinking
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-yellow-500 hover:bg-yellow-600 text-white"
+                }`}
             >
               Send
             </button>
@@ -84,10 +131,10 @@ const FloatingChatBot = ({ recipeId, recipeTitle, recipeContext }) => {
         </div>
       ) : (
         <button
-          onClick={toggleChat}
-          className="bg-orange-600 hover:bg-orange-700 text-white p-4 rounded-full shadow-lg"
+          onClick={() => setIsOpen(true)}
+          className="bg-yellow-500 hover:bg-yellow-600 text-white p-4 rounded-full shadow-lg flex items-center justify-center animate-pulse"
         >
-          <FaComments className="text-xl" />
+          <FiMessageCircle size={24} />
         </button>
       )}
     </div>

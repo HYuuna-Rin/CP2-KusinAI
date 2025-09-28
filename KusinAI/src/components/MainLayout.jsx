@@ -144,7 +144,7 @@ const MainLayout = ({ children }) => {
       {/* Main Content */}
       <div className="flex flex-col flex-grow w-full">
         {/* Topbar */}
-        <header className="relative bg-gray-900/70 text-white px-3 py-2 shadow-md flex items-center justify-between gap-2 md:px-6 md:py-3 min-h-[56px]">
+        <header className="relative bg-green-900/70 text-white px-3 py-2 shadow-md flex items-center justify-between gap-2 md:px-6 md:py-3 min-h-[56px]">
           <div className="flex items-center flex-shrink-0">
             <Link
               to="/"

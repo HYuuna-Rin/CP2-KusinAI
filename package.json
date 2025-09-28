@@ -1,6 +1,9 @@
 {
   "dependencies": {
+    "@tailwindcss/typography": "^0.5.19",
     "@tensorflow-models/mobilenet": "^2.1.1",
-    "@tensorflow/tfjs": "^4.22.0"
+    "@tensorflow/tfjs": "^4.22.0",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1"
   }
 }
