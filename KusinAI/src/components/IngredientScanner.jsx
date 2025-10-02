@@ -9,7 +9,6 @@ const IngredientScanner = ({ onScan }) => {
   const [stream, setStream] = useState(null);
   const [cameraFacing, setCameraFacing] = useState("environment"); // back camera default
   const [error, setError] = useState("");
-  const [zoom, setZoom] = useState(1);
 
   const startCamera = async () => {
     try {
@@ -23,7 +22,7 @@ const IngredientScanner = ({ onScan }) => {
       videoRef.current.srcObject = mediaStream;
     } catch (err) {
       console.error("Camera access error:", err);
-      setError("Unable to access camera. Please allow permissions.");
+      showError("Unable to access camera. Please allow permissions.");
     }
   };
 
@@ -38,16 +37,6 @@ const IngredientScanner = ({ onScan }) => {
     stopCamera();
     setCameraFacing((prev) => (prev === "environment" ? "user" : "environment"));
     setTimeout(startCamera, 200);
-  };
-
-  const handleZoom = (e) => {
-    const videoTrack = stream?.getVideoTracks()[0];
-    const capabilities = videoTrack?.getCapabilities();
-    if (!capabilities?.zoom) return;
-
-    const newZoom = Math.min(Math.max(zoom + e, capabilities.zoom.min), capabilities.zoom.max);
-    videoTrack.applyConstraints({ advanced: [{ zoom: newZoom }] });
-    setZoom(newZoom);
   };
 
   const captureAndScan = async () => {
@@ -69,17 +58,22 @@ const IngredientScanner = ({ onScan }) => {
 
         const text = res.data.text?.trim();
         if (!text || text.length < 2) {
-          setError("⚠️ Invalid scan. Please try again.");
+          showError("⚠️ Invalid scan. Please try again with clearer input.");
           return;
         }
 
         setError("");
-        onScan(text); // pass only valid input
+        onScan(text); // only valid input gets passed
       } catch (err) {
         console.error("OCR scan error:", err);
-        setError("❌ Failed to process scan.");
+        showError("❌ Failed to process scan. Please try again.");
       }
     }, "image/jpeg");
+  };
+
+  const showError = (msg) => {
+    setError(msg);
+    setTimeout(() => setError(""), 4000); // auto-hide after 4s
   };
 
   return (
@@ -91,7 +85,7 @@ const IngredientScanner = ({ onScan }) => {
           playsInline
           className="w-full max-w-sm rounded border"
         />
-        <div className="flex gap-2 mt-3">
+        <div className="flex flex-wrap justify-center gap-2 mt-3">
           {!stream ? (
             <button
               onClick={startCamera}
@@ -100,43 +94,36 @@ const IngredientScanner = ({ onScan }) => {
               Start Camera
             </button>
           ) : (
-            <button
-              onClick={stopCamera}
-              className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
-            >
-              Stop Camera
-            </button>
-          )}
-          <button
-            onClick={flipCamera}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
-          >
-            Flip Camera
-          </button>
-          {stream && (
             <>
-              <button
-                onClick={() => handleZoom(0.5)}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded"
-              >
-                ➕ Zoom
-              </button>
-              <button
-                onClick={() => handleZoom(-0.5)}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded"
-              >
-                ➖ Zoom
-              </button>
               <button
                 onClick={captureAndScan}
                 className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded"
               >
-                Scan
+                Capture
+              </button>
+              <button
+                onClick={flipCamera}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+              >
+                Flip
+              </button>
+              <button
+                onClick={stopCamera}
+                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
+              >
+                Cancel
               </button>
             </>
           )}
         </div>
-        {error && <p className="text-red-600 mt-2">{error}</p>}
+
+        {/* Error Popup */}
+        {error && (
+          <div className="mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative w-full max-w-sm">
+            <strong className="font-bold">Error:</strong>
+            <span className="block sm:inline ml-2">{error}</span>
+          </div>
+        )}
       </div>
     </div>
   );
