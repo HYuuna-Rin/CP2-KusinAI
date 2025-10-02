@@ -78,13 +78,18 @@ const MainLayout = ({ children }) => {
   };
 
   return (
-    <div
-      className="flex min-h-screen bg-cover bg-center"
-      style={{
-        backgroundImage:
-          "url('https://images.unsplash.com/photo-1606788075761-36c9a3ff37f6')",
-      }}
-    >
+  <div className="flex min-h-screen relative">
+      {/* Background image with low opacity overlay */}
+      <div className="fixed inset-0 w-full h-full z-0 pointer-events-none" aria-hidden="true">
+        <img
+          src="/assets/KusinAIBG.png"
+          alt="background"
+          className="w-full h-full object-cover"
+          style={{ opacity: 0.18 }}
+        />
+      </div>
+  {/* Main content wrapper with relative positioning and full opacity */}
+  <div className="flex flex-col flex-grow w-full relative z-10">
       {/* Sidebar */}
       <div
         className={`fixed top-0 right-0 h-full bg-gray-900 text-white transform transition-transform duration-300 ease-in-out z-40 ${
@@ -144,63 +149,74 @@ const MainLayout = ({ children }) => {
       {/* Main Content */}
       <div className="flex flex-col flex-grow w-full">
         {/* Topbar */}
-        <header className="relative bg-green-900/70 text-white px-3 py-2 shadow-md flex items-center justify-between gap-2 md:px-6 md:py-3 min-h-[56px]">
-          <div className="flex items-center flex-shrink-0">
-            <Link
-              to="/"
-              onClick={() => setSidebarOpen(false)}
-              className="text-xl font-semibold"
+        <header className="relative px-3 py-2 shadow-md flex items-center justify-between gap-2 md:px-6 md:py-3 min-h-[56px]">
+          {/* Topbar background overlay */}
+          <div className="absolute inset-0 bg-green-900" style={{ opacity: 0.65, zIndex: 1 }} />
+          <div className="relative w-full flex items-center justify-between gap-2" style={{ zIndex: 2 }}>
+            <div className="flex items-center flex-shrink-0 h-full">
+              <Link
+                to="/"
+                onClick={() => setSidebarOpen(false)}
+                className="flex items-center gap-2 h-full"
+                style={{ fontFamily: 'Poppins, Montserrat, Quicksand, Arial, sans-serif', fontWeight: 700, fontSize: '1.5rem', letterSpacing: '0.02em' }}
+              >
+                <img
+                  src="/assets/KusinAILogo.png"
+                  alt="KusinAI Logo"
+                  className="h-full max-h-[36px] w-auto object-contain"
+                  style={{ marginRight: '0.5rem', display: 'block', padding: 0, marginTop: 0, marginBottom: 0 }}
+                />
+                <span style={{ color: '#1e293b', textShadow: '0 1px 2px #fff8' }}>Kusin<span style={{ color: '#0ea5e9' }}>AI</span></span>
+              </Link>
+            </div>
+            <form
+              onSubmit={handleSearchSubmit}
+              className="flex items-center bg-white rounded-full flex-shrink min-w-0 w-[160px] sm:w-[260px] md:w-[280px] lg:w-[340px] mx-2 transition-all duration-200 border border-[#bdbdbd] shadow-sm"
+              style={{ minWidth: 0 }}
             >
-              KusinAI
-            </Link>
-          </div>
-          <form
-            onSubmit={handleSearchSubmit}
-            className="flex items-center bg-white rounded-full flex-shrink min-w-0 w-[160px] sm:w-[260px] md:w-[280px] lg:w-[340px] mx-2 transition-all duration-200 border border-[#bdbdbd] shadow-sm"
-            style={{ minWidth: 0 }}
-          >
-            <button
-              type="submit"
-              className="ml-2 p-1 text-gray-500 hover:text-blue-600 flex-shrink-0 focus:outline-none"
-              title="Search"
-            >
-              <FiSearch size={20} />
-            </button>
-            <input
-              type="text"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Insert Ingredient/s..."
-              className="px-3 py-1 text-[#222] w-full focus:outline-none text-sm sm:text-base min-w-0 bg-transparent placeholder-[#888]"
-              style={{ fontWeight: 500 }}
-            />
-            <button
-              type="button"
-              className="p-2 text-gray-600 hover:text-blue-600 flex-shrink-0"
-              onClick={() => {
-                setScannerOpen(true);
-                setTimeout(startCamera, 300);
-              }}
-              title="Scan ingredient"
-            >
-              <FiCamera size={20} />
-            </button>
-          </form>
-          <div className="flex items-center gap-4 flex-shrink-0">
-            {isLoggedIn() && (
-              <FiUser
-                className="text-2xl cursor-pointer"
-                onClick={() =>
-                  role === "admin"
-                    ? navigate("/admin/dashboard")
-                    : navigate("/profile")
-                }
+              <button
+                type="submit"
+                className="ml-2 p-1 text-gray-500 hover:text-blue-600 flex-shrink-0 focus:outline-none"
+                title="Search"
+              >
+                <FiSearch size={20} />
+              </button>
+              <input
+                type="text"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="Insert Ingredient/s..."
+                className="px-3 py-1 text-[#222] w-full focus:outline-none text-sm sm:text-base min-w-0 bg-transparent placeholder-[#888]"
+                style={{ fontWeight: 500 }}
               />
-            )}
-            <FiMenu
-              className="text-2xl cursor-pointer"
-              onClick={() => setSidebarOpen(true)}
-            />
+              <button
+                type="button"
+                className="p-2 text-gray-600 hover:text-blue-600 flex-shrink-0"
+                onClick={() => {
+                  setScannerOpen(true);
+                  setTimeout(startCamera, 300);
+                }}
+                title="Scan ingredient"
+              >
+                <FiCamera size={20} />
+              </button>
+            </form>
+            <div className="flex items-center gap-4 flex-shrink-0">
+              {isLoggedIn() && (
+                <FiUser
+                  className="text-2xl cursor-pointer"
+                  onClick={() =>
+                    role === "admin"
+                      ? navigate("/admin/dashboard")
+                      : navigate("/profile")
+                  }
+                />
+              )}
+              <FiMenu
+                className="text-2xl cursor-pointer"
+                onClick={() => setSidebarOpen(true)}
+              />
+            </div>
           </div>
         </header>
 
@@ -241,6 +257,7 @@ const MainLayout = ({ children }) => {
           </div>
         )}
       </div>
+    </div>
     </div>
   );
 };

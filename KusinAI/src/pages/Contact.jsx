@@ -51,7 +51,7 @@ function Contact() {
     <PageTransition>
       <MainLayout>
         <main className="flex-grow flex items-center justify-center text-white text-center px-6 py-8">
-          <div className="bg-black/60 p-6 rounded-lg max-w-xl w-full shadow-lg text-left space-y-4">
+          <div className="bg-black/50 p-6 rounded-lg max-w-xl w-full shadow-lg text-left space-y-4">
             <h2 className="text-2xl font-bold text-white text-center mb-2">Contact Us</h2>
             {/* Social Links */}
             <div className="flex justify-center gap-4 mb-4">

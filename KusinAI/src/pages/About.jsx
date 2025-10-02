@@ -7,7 +7,7 @@ function About() {
     <PageTransition>
       <MainLayout>
         <main className="flex-grow flex items-center justify-center bg-black/50 text-white text-center px-4 py-8">
-          <div className="bg-black/60 rounded-lg p-6 max-w-4xl w-full text-sm sm:text-base leading-relaxed shadow-lg">
+          <div className="bg-black/50 rounded-lg p-6 max-w-4xl w-full text-sm sm:text-base leading-relaxed shadow-lg">
             <h1 className="text-3xl font-bold mb-4 text-white flex items-center justify-center gap-2">
               <span>ABOUT US</span>
               <span role="img" aria-label="chef">👨‍🍳</span>

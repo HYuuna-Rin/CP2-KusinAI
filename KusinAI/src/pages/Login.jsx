@@ -76,7 +76,7 @@ function Login() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-yellow-100 via-orange-50 to-yellow-200">
+  <div className="flex flex-col h-screen bg-gradient-to-br from-green-300 via-green-400 to-emerald-500">
       <div className="flex justify-between items-center p-4">
         <div
           onClick={() => navigate("/")}

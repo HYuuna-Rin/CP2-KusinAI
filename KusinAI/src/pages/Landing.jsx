@@ -9,7 +9,7 @@ function Landing() {
     <PageTransition>
       <MainLayout>
         {/* Hero Section */}
-        <div className="flex items-center justify-center h-full text-white text-center">
+        <div className="flex items-center justify-center h-full text-black text-center">
           <div>
             <h1 className="text-4xl md:text-5xl font-bold mb-4">Welcome to KusinAI</h1>
             <p className="max-w-xl mx-auto mb-6">
