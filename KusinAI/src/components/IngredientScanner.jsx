@@ -61,17 +61,26 @@ const IngredientScanner = ({ onScan }) => {
         { headers: { "Content-Type": "application/json" } }
       );
 
+      // Debug: log the full backend response
+      console.log("Scanner API response:", res.data);
+
       const ingredients = res.data.ingredients;
       if (!ingredients || !Array.isArray(ingredients) || ingredients.length === 0 || ingredients[0] === "No clear ingredients detected") {
-        showError("⚠️ No clear ingredients detected. Try again.");
+        showError("⚠️ No clear ingredients detected. Try again.\nRaw response: " + JSON.stringify(res.data));
         return;
       }
 
       setError("");
       onScan(ingredients.join(", "));
     } catch (err) {
-      console.error("Ingredient scan error:", err);
-      showError("❌ Failed to process scan. Please try again.");
+      // Debug: log error details
+      if (err.response) {
+        console.error("Ingredient scan error (response):", err.response.data);
+        showError("❌ Failed to process scan. Server error: " + JSON.stringify(err.response.data));
+      } else {
+        console.error("Ingredient scan error:", err);
+        showError("❌ Failed to process scan. " + err.message);
+      }
     }
   };
 
