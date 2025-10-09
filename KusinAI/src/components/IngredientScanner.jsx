@@ -47,28 +47,29 @@ const IngredientScanner = ({ onScan }) => {
     canvas.height = videoRef.current.videoHeight;
     canvas.getContext("2d").drawImage(videoRef.current, 0, 0);
 
-    canvas.toBlob(async (blob) => {
-      try {
-        const formData = new FormData();
-        formData.append("image", blob, "scan.jpg");
+    // Convert canvas to base64
+    const imageBase64 = canvas.toDataURL("image/jpeg").split(",")[1];
 
-        const res = await axios.post(`${API_URL}/api/scanner`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+    try {
+      const res = await axios.post(
+        `${API_URL}/api/scanner/scan`,
+        { imageBase64 },
+        { headers: { "Content-Type": "application/json" } }
+      );
 
-        const text = res.data.text?.trim();
-        if (!text || text.length < 2) {
-          showError("⚠️ Invalid scan. Please try again with clearer input.");
-          return;
-        }
-
-        setError("");
-        onScan(text); // only valid input gets passed
-      } catch (err) {
-        console.error("OCR scan error:", err);
-        showError("❌ Failed to process scan. Please try again.");
+      const ingredients = res.data.ingredients;
+      if (!ingredients || !Array.isArray(ingredients) || ingredients.length === 0 || ingredients[0] === "No clear ingredients detected") {
+        showError("⚠️ No clear ingredients detected. Try again.");
+        return;
       }
-    }, "image/jpeg");
+
+      setError("");
+      // Pass the first detected ingredient, or join all if you want
+      onScan(ingredients.join(", "));
+    } catch (err) {
+      console.error("Ingredient scan error:", err);
+      showError("❌ Failed to process scan. Please try again.");
+    }
   };
 
   const showError = (msg) => {
