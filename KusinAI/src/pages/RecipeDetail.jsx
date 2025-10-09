@@ -280,10 +280,10 @@ const RecipeDetail = () => {
   return (
     <PageTransition>
       <MainLayout>
-        <div className="max-w-4xl mx-auto bg-white bg-opacity-60 shadow-md rounded-lg p-6 space-y-6 relative mt-6">
+        <div className="max-w-4xl mx-auto bg-surface/90 shadow-md rounded-lg p-6 space-y-6 relative mt-6 text-text">
           <Link
             to={`/search?query=${encodeURIComponent(fromQuery)}`}
-            className="absolute top-4 left-4 text-gray-500 hover:text-gray-700"
+            className="absolute top-4 left-4 text-leaf hover:text-accent"
           >
             <FiArrowLeft size={20} />
           </Link>
@@ -292,45 +292,45 @@ const RecipeDetail = () => {
             <img src={recipe.image} alt={recipe.title} className="w-full h-64 object-cover rounded-md" />
           )}
           <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold">{recipe.title}</h1>
+            <h1 className="text-3xl font-bold text-primary">{recipe.title}</h1>
             {user?.role === "admin" && (
               <div className="flex gap-2">
                 <button
                   onClick={openEditRecipe}
-                  className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded flex items-center gap-2"
+                  className="px-3 py-1 bg-primary hover:bg-leaf text-white rounded flex items-center gap-2"
                 >
                   <FiEdit /> Edit
                 </button>
                 <button
                   onClick={() => setDeleteRecipeModal(true)}
-                  className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded flex items-center gap-2"
+                  className="px-3 py-1 bg-accent hover:bg-tamarind text-white rounded flex items-center gap-2"
                 >
                   <FiTrash2 /> Delete
                 </button>
               </div>
             )}
           </div>
-          <p className="text-gray-600 italic">{recipe.region}</p>
+          <p className="text-leaf italic">{recipe.region}</p>
 
           <div>
-            <h2 className="text-xl font-semibold">Ingredients</h2>
+            <h2 className="text-xl font-semibold text-leaf">Ingredients</h2>
             <ul className="list-disc ml-6">{recipe.ingredients.map((item, idx) => <li key={idx}>{item}</li>)}</ul>
           </div>
 
           <div>
-            <h2 className="text-xl font-semibold">Instructions</h2>
+            <h2 className="text-xl font-semibold text-leaf">Instructions</h2>
             <ol className="list-decimal ml-6">{recipe.steps.map((step, idx) => <li key={idx}>{step}</li>)}</ol>
           </div>
 
           {/* COMMENT SECTION */}
-          <div className="pt-6 border-t border-gray-300">
-            <h2 className="text-xl font-semibold mb-2">💬 Comments</h2>
+          <div className="pt-6 border-t border-leaf/40">
+            <h2 className="text-xl font-semibold mb-2 text-leaf">💬 Comments</h2>
             <textarea
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               rows={1}
               placeholder="Write a comment..."
-              className="w-full p-2 border rounded mb-2 resize-none overflow-hidden"
+              className="w-full p-2 border border-leaf/40 rounded mb-2 resize-none overflow-hidden bg-background text-text focus:border-leaf"
               style={{ minHeight: '48px', maxHeight: '200px' }}
               onInput={e => {
                 e.target.style.height = '48px';
@@ -342,32 +342,32 @@ const RecipeDetail = () => {
                 if (commentText.trim()) handlePostComment();
               }}
               disabled={!commentText.trim()}
-              className={`px-4 py-2 font-semibold rounded ${commentText.trim() ? 'bg-yellow-500 hover:bg-yellow-600 text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
+              className={`px-4 py-2 font-semibold rounded transition-colors ${commentText.trim() ? 'bg-primary hover:bg-leaf text-white' : 'bg-surface text-tamarind cursor-not-allowed'}`}
             >
               Post Comment
             </button>
 
             <div className="mt-6 space-y-4">
               {comments.map((com) => (
-                <div key={com._id} className="border p-3 rounded bg-gray-50">
+                <div key={com._id} className="border border-leaf/30 p-3 rounded bg-background/80">
                   <div className="flex items-center gap-2 mb-1">
                     <img
                       src={com.profileImage || "/default-profile.png"}
                       alt="Profile"
-                      className="w-6 h-6 rounded-full object-cover border border-gray-300 cursor-pointer"
+                      className="w-6 h-6 rounded-full object-cover border border-leaf cursor-pointer"
                       onClick={() => navigate(
                         user?.id === com.userId ? "/profile" : `/profile/${com.userId}`
                       )}
                     />
                     <span
-                      className="font-semibold ml-2 hover:underline cursor-pointer"
+                      className="font-semibold ml-2 hover:underline cursor-pointer text-leaf"
                       onClick={() => navigate(
                         user?.id === com.userId ? "/profile" : `/profile/${com.userId}`
                       )}
                     >
                       {com.username}
                     </span>
-                    <span className="text-xs text-gray-500 ml-auto">{formatTime(com.createdAt)}</span>
+                    <span className="text-xs text-tamarind ml-auto">{formatTime(com.createdAt)}</span>
                   </div>
 
                   {editingCommentId === com._id ? (
@@ -386,17 +386,17 @@ const RecipeDetail = () => {
                           );
                           setComments(updated);
                         }}
-                        className="w-full p-2 border rounded"
+                        className="w-full p-2 border border-leaf/40 rounded bg-background text-text"
                       />
                       <button
                         onClick={() => handleEditComment(com._id, com.comment)}
-                        className="text-sm text-blue-600 mt-1 mr-2"
+                        className="text-sm text-primary mt-1 mr-2"
                       >
                         Save
                       </button>
                       <button
                         onClick={() => handleCancelEditComment(com._id)}
-                        className="text-sm text-gray-600 mt-1"
+                        className="text-sm text-tamarind mt-1"
                       >
                         Cancel
                       </button>
@@ -405,23 +405,21 @@ const RecipeDetail = () => {
                     <p className="mb-2">{com.comment}</p>
                   )}
                   
-                  <div className="flex flex-col gap-1 text-sm text-gray-600 mt-2">
+                  <div className="flex flex-col gap-1 text-sm text-leaf mt-2">
                     <div className="flex items-center gap-4">
                       <button
                         onClick={() => handleLike(com._id)}
-                        className={`flex items-center gap-1 ${com.likes && user && com.likes.includes(user.id) ? 'text-red-500' : 'hover:text-red-500'}`}
+                        className={`flex items-center gap-1 ${com.likes && user && com.likes.includes(user.id) ? 'text-accent' : 'hover:text-accent'}`}
                         aria-label={com.likes && user && com.likes.includes(user.id) ? 'Unlike' : 'Like'}
                       >
                         {com.likes && user && com.likes.includes(user.id) ? <FaHeart /> : <FaRegHeart />}
                         {com.likes?.length || 0}
                       </button>
-                      <button onClick={() => setReplyText((prev) => ({ ...prev, [com._id]: "" }))}>
-                        Reply
-                      </button>
+                      <button onClick={() => setReplyText((prev) => ({ ...prev, [com._id]: "" }))} className="hover:text-primary">Reply</button>
                       {user && (com.userId === user.id || user.role === "admin") && (
                         <>
-                          <button onClick={() => setEditingCommentId(com._id)}><FiEdit /></button>
-                          <button onClick={() => handleDeleteComment(com._id)}><FiTrash2 /></button>
+                          <button onClick={() => setEditingCommentId(com._id)} className="hover:text-primary"><FiEdit /></button>
+                          <button onClick={() => handleDeleteComment(com._id)} className="hover:text-accent"><FiTrash2 /></button>
                         </>
                       )}
                     </div>
@@ -439,12 +437,12 @@ const RecipeDetail = () => {
                         }
                         rows="2"
                         placeholder="Write a reply..."
-                        className="w-full p-2 border rounded"
+                        className="w-full p-2 border border-leaf/40 rounded bg-background text-text"
                       />
                       <div className="mt-1 flex gap-2">
                         <button
                           onClick={() => handleReply(com._id)}
-                          className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded"
+                          className="px-3 py-1 bg-primary hover:bg-leaf text-white rounded"
                         >
                           Send Reply
                         </button>
@@ -456,7 +454,7 @@ const RecipeDetail = () => {
                               return updated;
                             });
                           }}
-                          className="px-3 py-1 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded"
+                          className="px-3 py-1 bg-surface hover:bg-tamarind text-tamarind rounded"
                         >
                           Cancel
                         </button>
@@ -466,27 +464,27 @@ const RecipeDetail = () => {
 
                   {/* REPLIES SECTION */}
                   {com.replies?.length > 0 && (
-                    <div className="mt-3 ml-6 space-y-2 text-sm text-gray-700">
+                    <div className="mt-3 ml-6 space-y-2 text-sm text-leaf">
                       {com.replies.map((reply) => (
-                        <div key={reply._id} className="border-l pl-3">
+                        <div key={reply._id} className="border-l-2 border-leaf/40 pl-3">
                           <div className="flex items-center gap-2 mb-1">
                             <img
                               src={reply.profileImage || "/default-profile.png"}
                               alt="Profile"
-                              className="w-5 h-5 rounded-full object-cover border border-gray-300 cursor-pointer"
+                              className="w-5 h-5 rounded-full object-cover border border-leaf cursor-pointer"
                               onClick={() => navigate(
                                 user?.id === reply.userId ? "/profile" : `/profile/${reply.userId}`
                               )}
                             />
                             <span
-                              className="font-semibold hover:underline cursor-pointer"
+                              className="font-semibold hover:underline cursor-pointer text-leaf"
                               onClick={() => navigate(
                                 user?.id === reply.userId ? "/profile" : `/profile/${reply.userId}`
                               )}
                             >
                               {reply.username}
                             </span>
-                            <span className="text-xs text-gray-500 ml-auto">
+                            <span className="text-xs text-tamarind ml-auto">
                               {formatTime(reply.createdAt)}
                             </span>
                           </div>
@@ -517,13 +515,13 @@ const RecipeDetail = () => {
                                     });
                                     setComments(updated);
                                   }}
-                                  className="w-full p-1 border rounded"
+                                  className="w-full p-1 border border-leaf/40 rounded bg-background text-text"
                                 />
                                 <button
                                   onClick={() =>
                                     handleEditReply(com._id, reply._id, reply.comment)
                                   }
-                                  className="text-sm text-blue-600 mt-1 mr-2"
+                                  className="text-sm text-primary mt-1 mr-2"
                                 >
                                   Save
                                 </button>
@@ -531,7 +529,7 @@ const RecipeDetail = () => {
                                   onClick={() =>
                                     handleCancelEditReply(com._id, reply._id)
                                   }
-                                  className="text-sm text-gray-600 mt-1"
+                                  className="text-sm text-tamarind mt-1"
                                 >
                                   Cancel
                                 </button>
@@ -539,21 +537,21 @@ const RecipeDetail = () => {
                             ) : (
                               <>
                                 <p className="mb-1">{reply.comment}</p>
-                                <div className="flex items-center gap-4 text-xs text-gray-600">
+                                <div className="flex items-center gap-4 text-xs text-leaf">
                                   <button
                                     onClick={() => handleLikeReply(com._id, reply._id)}
-                                    className={`flex items-center gap-1 ${reply.likes && user && reply.likes.includes(user.id) ? 'text-red-500' : 'hover:text-red-500'}`}
+                                    className={`flex items-center gap-1 ${reply.likes && user && reply.likes.includes(user.id) ? 'text-accent' : 'hover:text-accent'}`}
                                     aria-label={reply.likes && user && reply.likes.includes(user.id) ? 'Unlike' : 'Like'}
                                   >
                                     {reply.likes && user && reply.likes.includes(user.id) ? <FaHeart /> : <FaRegHeart />}
                                     {reply.likes?.length || 0}
                                   </button>
-                                  <button onClick={() => setReplyText((prev) => ({ ...prev, [com._id]: `@${reply.username} ` }))}>
+                                  <button onClick={() => setReplyText((prev) => ({ ...prev, [com._id]: `@${reply.username} ` }))} className="hover:text-primary">
                                     Reply
                                   </button>
                                   <>
-                                    <button onClick={() => setEditingReply((prev) => ({ ...prev, [reply._id]: true }))} className="text-blue-600 ml-2">Edit</button>
-                                    <button onClick={() => handleDeleteReply(com._id, reply._id)} className="text-red-600 ml-2">Delete</button>
+                                    <button onClick={() => setEditingReply((prev) => ({ ...prev, [reply._id]: true }))} className="text-primary ml-2">Edit</button>
+                                    <button onClick={() => handleDeleteReply(com._id, reply._id)} className="text-accent ml-2">Delete</button>
                                   </>
                                 </div>
                               </>

@@ -42,21 +42,29 @@ function Register() {
   };
 
   return (
-  <div className="flex flex-col h-screen bg-gradient-to-br from-green-300 via-green-400 to-emerald-500">
+    <div className="flex flex-col h-screen bg-background">
+      <div className="fixed inset-0 w-full h-full z-0 pointer-events-none" aria-hidden="true">
+        <img
+          src="/assets/KusinAIBG.png"
+          alt="background"
+          className="w-full h-full object-cover"
+          style={{ opacity: 0.18 }}
+        />
+      </div>
       <div className="flex justify-between items-center p-4">
-        <div onClick={() => navigate("/")} className="text-orange-600 text-xl font-bold cursor-pointer">
+        <div onClick={() => navigate("/")} className="text-primary text-xl font-bold cursor-pointer">
           🍳 KusinAI
         </div>
       </div>
-      <div className="flex-grow flex justify-center items-center">
-        <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-md w-full max-w-md space-y-4">
-          <h1 className="text-2xl font-bold text-orange-600 text-center">Register</h1>
+      <div className="flex-grow flex justify-center items-center relative z-10">
+        <form onSubmit={handleSubmit} className="bg-background/80 backdrop-blur-[2px] p-8 rounded-lg shadow-md w-full max-w-md space-y-4">
+          <h1 className="text-2xl font-bold text-primary text-center">Register</h1>
           <input
             name="name"
             type="text"
             placeholder="Name"
             onChange={handleChange}
-            className="w-full p-3 border border-gray-300 rounded"
+            className="w-full p-3 border border-leaf/40 rounded bg-background text-text focus:border-leaf"
             required
           />
           <input
@@ -64,7 +72,7 @@ function Register() {
             type="email"
             placeholder="Email"
             onChange={handleChange}
-            className="w-full p-3 border border-gray-300 rounded"
+            className="w-full p-3 border border-leaf/40 rounded bg-background text-text focus:border-leaf"
             required
           />
           <div className="relative">
@@ -73,12 +81,12 @@ function Register() {
               type={showPassword ? "text" : "password"}
               placeholder="Password"
               onChange={handleChange}
-              className="w-full p-3 border border-gray-300 rounded pr-10"
+              className="w-full p-3 border border-leaf/40 rounded pr-10 bg-background text-text focus:border-leaf"
               required
             />
             <button
               type="button"
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-leaf"
               onClick={() => setShowPassword((prev) => !prev)}
               tabIndex={-1}
               aria-label={showPassword ? "Hide password" : "Show password"}
@@ -93,12 +101,12 @@ function Register() {
               placeholder="Confirm Password"
               value={confirmPassword}
               onChange={e => setConfirmPassword(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded pr-10 mt-2"
+              className="w-full p-3 border border-leaf/40 rounded pr-10 mt-2 bg-background text-text focus:border-leaf"
               required
             />
             <button
               type="button"
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-leaf"
               onClick={() => setShowConfirmPassword((prev) => !prev)}
               tabIndex={-1}
               aria-label={showConfirmPassword ? "Hide password" : "Show password"}
@@ -106,11 +114,11 @@ function Register() {
               {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
             </button>
           </div>
-          <button type="submit" className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded font-semibold">
+          <button type="submit" className="w-full bg-primary hover:bg-leaf text-white py-2 rounded font-semibold transition-colors">
             Register
           </button>
           <p className="text-sm text-center">
-            Already have an account? <a href="/login" className="text-orange-600 font-medium">Login</a>
+            Already have an account? <a href="/login" className="text-accent font-medium hover:underline">Login</a>
           </p>
         </form>
       </div>

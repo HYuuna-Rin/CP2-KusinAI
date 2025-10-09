@@ -146,14 +146,14 @@ const Profile = () => {
   return (
     <PageTransition>
       <MainLayout>
-        <main className="flex-grow flex items-center justify-center">
-          <div className="bg-black bg-opacity-60 rounded-xl text-white p-6 w-full max-w-3xl mx-auto mt-8">
+        <main className="flex-grow flex items-center justify-center bg-background/90 text-text">
+          <div className="bg-surface/90 rounded-xl text-text p-6 w-full max-w-3xl mx-auto mt-8 shadow-lg">
             <div className="flex items-center mb-6">
-              <div className="w-20 h-20 bg-gray-300 rounded-full overflow-hidden mr-4 relative">
+              <div className="w-20 h-20 bg-background rounded-full overflow-hidden mr-4 relative border-2 border-leaf">
                 {profileImage ? (
                   <img src={profileImage} alt="Profile" className="w-full h-full object-cover rounded-full" />
                 ) : (
-                  <span className="w-full h-full flex items-center justify-center text-black">No Photo</span>
+                  <span className="w-full h-full flex items-center justify-center text-tamarind">No Photo</span>
                 )}
                 <input
                   type="file"
@@ -164,14 +164,14 @@ const Profile = () => {
                 />
               </div>
               <div>
-                <h2 className="text-2xl font-bold">{username}</h2>
-                <p className="text-sm text-gray-300">{email}</p>
+                <h2 className="text-2xl font-bold text-primary">{username}</h2>
+                <p className="text-sm text-leaf">{email}</p>
               </div>
             </div>
 
             <div className="mb-6">
               <textarea
-                className="w-full p-3 text-black rounded-md focus:outline-none"
+                className="w-full p-3 text-text rounded-md focus:outline-none bg-background border border-leaf/40 focus:border-leaf"
                 placeholder="Add personal notes..."
                 rows="4"
                 value={notes}
@@ -183,7 +183,7 @@ const Profile = () => {
             {showSaveButton && (
               <button
                 onClick={handleSaveNotes}
-                className="mt-2 px-4 py-2 bg-yellow-500 text-black font-semibold rounded hover:bg-yellow-600 transition duration-200"
+                className="mt-2 px-4 py-2 bg-primary text-white font-semibold rounded hover:bg-leaf transition duration-200"
               >
                 Save
               </button>
@@ -191,20 +191,20 @@ const Profile = () => {
 
             <div className="grid grid-cols-2 gap-6">
               <div>
-                <h3 className="text-lg font-semibold mb-2">Favorites</h3>
+                <h3 className="text-lg font-semibold mb-2 text-leaf">Favorites</h3>
                 <ul className="list-disc list-inside space-y-2">
                   {favorites.length === 0 ? (
-                    <li className="italic text-gray-300">No favorites yet</li>
+                    <li className="italic text-tamarind">No favorites yet</li>
                   ) : (
                     favorites.map((recipe) =>
                       recipe && recipe._id && recipe.title ? (
                         <li key={recipe._id} className="flex justify-between items-center">
-                          <Link to={`/recipes/title/${encodeURIComponent(recipe.title)}`} className="text-yellow-200 hover:underline">
+                          <Link to={`/recipes/title/${encodeURIComponent(recipe.title)}`} className="text-accent hover:underline">
                             {recipe.title}
                           </Link>
                           <button
                             onClick={() => handleRemoveFavorite(recipe._id)}
-                            className="ml-2 text-xs px-2 py-1 bg-red-600 hover:bg-red-700 rounded text-white"
+                            className="ml-2 text-xs px-2 py-1 bg-accent hover:bg-leaf rounded text-white"
                           >
                             Remove
                           </button>
@@ -215,10 +215,10 @@ const Profile = () => {
                 </ul>
               </div>
               <div>
-                <h3 className="text-lg font-semibold mb-2">My Comments</h3>
+                <h3 className="text-lg font-semibold mb-2 text-leaf">My Comments</h3>
                 <ul className="list-disc list-inside">
                   {comments.length === 0 ? (
-                    <li className="italic text-gray-300">No comments yet</li>
+                    <li className="italic text-tamarind">No comments yet</li>
                   ) : (
                     comments.map((c, i) => (
                       <li key={i}><strong>{c.recipeTitle}:</strong> {c.comment}</li>

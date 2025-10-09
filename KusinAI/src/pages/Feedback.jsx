@@ -67,18 +67,18 @@ function Feedback() {
   return (
     <PageTransition>
       <MainLayout>
-        <main className="flex-grow flex items-center justify-center text-white text-center px-6 py-8">
+        <main className="flex-grow flex items-center justify-center bg-background/0 text-text text-center px-6 py-8">
           <form
-            className="bg-black/50 p-6 rounded-lg max-w-xl w-full text-left space-y-4 shadow-xl"
+            className="bg-surface/90 p-6 rounded-lg max-w-xl w-full text-left space-y-4 shadow-xl"
             onSubmit={handleSubmit}
             noValidate
           >
-            <h2 className="text-2xl font-bold text-white mb-4 text-center">Feedback Form</h2>
+            <h2 className="text-2xl font-bold text-primary mb-4 text-center">Feedback Form</h2>
             {success && (
-              <div className="bg-green-700 text-white p-2 rounded text-center mb-2">{success}</div>
+              <div className="bg-primary text-white p-2 rounded text-center mb-2">{success}</div>
             )}
             {errors.submit && (
-              <div className="bg-red-700 text-white p-2 rounded text-center mb-2">{errors.submit}</div>
+              <div className="bg-accent text-white p-2 rounded text-center mb-2">{errors.submit}</div>
             )}
             <input
               type="text"
@@ -86,30 +86,30 @@ function Feedback() {
               value={form.name}
               onChange={handleChange}
               placeholder="Your Name"
-              className={`w-full px-4 py-2 rounded bg-white text-black focus:outline-none ${errors.name ? "border-red-500" : ""}`}
+              className={`w-full px-4 py-2 rounded bg-background text-text focus:outline-none border border-leaf/40 focus:border-leaf ${errors.name ? "border-accent" : ""}`}
             />
-            {errors.name && <div className="text-red-400 text-sm">{errors.name}</div>}
+            {errors.name && <div className="text-accent text-sm">{errors.name}</div>}
             <input
               type="email"
               name="email"
               value={form.email}
               onChange={handleChange}
               placeholder="Your Email"
-              className={`w-full px-4 py-2 rounded bg-white text-black focus:outline-none ${errors.email ? "border-red-500" : ""}`}
+              className={`w-full px-4 py-2 rounded bg-background text-text focus:outline-none border border-leaf/40 focus:border-leaf ${errors.email ? "border-accent" : ""}`}
             />
-            {errors.email && <div className="text-red-400 text-sm">{errors.email}</div>}
+            {errors.email && <div className="text-accent text-sm">{errors.email}</div>}
             <textarea
               rows="4"
               name="message"
               value={form.message}
               onChange={handleChange}
               placeholder="Write your feedback..."
-              className={`w-full px-4 py-2 rounded bg-white text-black focus:outline-none ${errors.message ? "border-red-500" : ""}`}
+              className={`w-full px-4 py-2 rounded bg-background text-text focus:outline-none border border-leaf/40 focus:border-leaf ${errors.message ? "border-accent" : ""}`}
             ></textarea>
-            {errors.message && <div className="text-red-400 text-sm">{errors.message}</div>}
+            {errors.message && <div className="text-accent text-sm">{errors.message}</div>}
             <button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded"
+              className="w-full bg-primary hover:bg-leaf text-white py-2 rounded transition-colors"
               disabled={loading}
             >
               {loading ? "Submitting..." : "Submit"}

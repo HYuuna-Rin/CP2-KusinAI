@@ -76,23 +76,31 @@ function Login() {
   };
 
   return (
-  <div className="flex flex-col h-screen bg-gradient-to-br from-green-300 via-green-400 to-emerald-500">
+    <div className="flex flex-col h-screen bg-background">
+      <div className="fixed inset-0 w-full h-full z-0 pointer-events-none" aria-hidden="true">
+        <img
+          src="/assets/KusinAIBG.png"
+          alt="background"
+          className="w-full h-full object-cover"
+          style={{ opacity: 0.18 }}
+        />
+      </div>
       <div className="flex justify-between items-center p-4">
         <div
           onClick={() => navigate("/")}
-          className="text-orange-600 text-xl font-bold cursor-pointer"
+          className="text-primary text-xl font-bold cursor-pointer"
         >
           🍳 KusinAI
         </div>
       </div>
-      <div className="flex-grow flex justify-center items-center">
+      <div className="flex-grow flex justify-center items-center relative z-10">
         <form
           onSubmit={handleSubmit}
-          className="bg-white p-8 rounded-lg shadow-md w-full max-w-md space-y-4"
+          className="bg-background/80 backdrop-blur-[2px] p-8 rounded-lg shadow-md w-full max-w-md space-y-4"
         >
-          <h1 className="text-2xl font-bold text-orange-600 text-center">Login</h1>
+          <h1 className="text-2xl font-bold text-primary text-center">Login</h1>
           {errorMsg && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded text-center mb-2 animate-pulse">
+            <div className="bg-accent/20 border border-accent text-accent px-4 py-2 rounded text-center mb-2 animate-pulse">
               {errorMsg}
             </div>
           )}
@@ -101,7 +109,7 @@ function Login() {
             type="email"
             placeholder="Email"
             onChange={handleChange}
-            className="w-full p-3 border border-gray-300 rounded"
+            className="w-full p-3 border border-leaf/40 rounded bg-background text-text focus:border-leaf"
             required
           />
           <div className="relative">
@@ -110,12 +118,12 @@ function Login() {
               type={showPassword ? "text" : "password"}
               placeholder="Password"
               onChange={handleChange}
-              className="w-full p-3 border border-gray-300 rounded pr-10"
+              className="w-full p-3 border border-leaf/40 rounded pr-10 bg-background text-text focus:border-leaf"
               required
             />
             <button
               type="button"
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-leaf"
               onClick={() => setShowPassword((prev) => !prev)}
               tabIndex={-1}
               aria-label={showPassword ? "Hide password" : "Show password"}
@@ -129,20 +137,20 @@ function Login() {
               type="checkbox"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
-              className="form-checkbox"
+              className="form-checkbox accent-leaf"
             />
             <span>Remember Me</span>
           </label>
 
           <button
             type="submit"
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded font-semibold"
+            className="w-full bg-primary hover:bg-leaf text-white py-2 rounded font-semibold transition-colors"
           >
             Login
           </button>
           <p className="text-sm text-center">
             Don’t have an account?{" "}
-            <a href="/register" className="text-orange-600 font-medium">
+            <a href="/register" className="text-accent font-medium hover:underline">
               Register
             </a>
           </p>

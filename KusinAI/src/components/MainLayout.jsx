@@ -1,3 +1,4 @@
+import IngredientScanner from "./IngredientScanner";
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { FiMenu, FiX, FiCamera, FiUser, FiSearch } from "react-icons/fi";
@@ -78,30 +79,30 @@ const MainLayout = ({ children }) => {
   };
 
   return (
-  <div className="flex min-h-screen relative">
+  <div className="flex min-h-screen relative bg-background">
       {/* Background image with low opacity overlay */}
       <div className="fixed inset-0 w-full h-full z-0 pointer-events-none" aria-hidden="true">
         <img
           src="/assets/KusinAIBG.png"
           alt="background"
           className="w-full h-full object-cover"
-          style={{ opacity: 0.18 }}
+          style={{ opacity: 1 }}
         />
       </div>
   {/* Main content wrapper with relative positioning and full opacity */}
   <div className="flex flex-col flex-grow w-full relative z-10">
       {/* Sidebar */}
       <div
-        className={`fixed top-0 right-0 h-full bg-gray-900 text-white transform transition-transform duration-300 ease-in-out z-40 ${
+        className={`fixed top-0 right-0 h-full bg-tamarind text-white transform transition-transform duration-300 ease-in-out z-40 ${
           isSidebarOpen ? "translate-x-0" : "translate-x-full"
         } w-64`}
       >
-        <div className="flex items-center justify-between p-4 border-b border-gray-700">
-          <span className="text-xl font-bold">KusinAI 🤖</span>
+        <div className="flex items-center justify-between p-4 border-b border-leaf">
+          <span className="text-xl font-bold text-accent">KusinAI 🤖</span>
           <div className="flex gap-2 items-center">
             {isLoggedIn() && <LogoutButton />}
             <FiX
-              className="cursor-pointer text-2xl hover:text-red-400"
+              className="cursor-pointer text-2xl hover:text-accent"
               onClick={() => setSidebarOpen(false)}
             />
           </div>
@@ -111,7 +112,7 @@ const MainLayout = ({ children }) => {
             <Link
               to="/"
               onClick={() => setSidebarOpen(false)}
-              className="block px-4 py-2 hover:bg-yellow-500/20 rounded"
+              className="block px-4 py-2 hover:bg-leaf/30 rounded transition-colors"
             >
               Home
             </Link>
@@ -120,7 +121,7 @@ const MainLayout = ({ children }) => {
             <Link
               to="/about"
               onClick={() => setSidebarOpen(false)}
-              className="block px-4 py-2 hover:bg-yellow-500/20 rounded"
+              className="block px-4 py-2 hover:bg-leaf/30 rounded transition-colors"
             >
               About
             </Link>
@@ -129,7 +130,7 @@ const MainLayout = ({ children }) => {
             <Link
               to="/feedback"
               onClick={() => setSidebarOpen(false)}
-              className="block px-4 py-2 hover:bg-yellow-500/20 rounded"
+              className="block px-4 py-2 hover:bg-leaf/30 rounded transition-colors"
             >
               Feedback
             </Link>
@@ -138,7 +139,7 @@ const MainLayout = ({ children }) => {
             <Link
               to="/contact"
               onClick={() => setSidebarOpen(false)}
-              className="block px-4 py-2 hover:bg-yellow-500/20 rounded"
+              className="block px-4 py-2 hover:bg-leaf/30 rounded transition-colors"
             >
               Contact
             </Link>
@@ -149,9 +150,9 @@ const MainLayout = ({ children }) => {
       {/* Main Content */}
       <div className="flex flex-col flex-grow w-full">
         {/* Topbar */}
-        <header className="relative px-3 py-2 shadow-md flex items-center justify-between gap-2 md:px-6 md:py-3 min-h-[56px]">
+        <header className="relative px-3 py-2 shadow-md flex items-center justify-between gap-2 md:px-6 md:py-3 min-h-[56px] bg-surface/90">
           {/* Topbar background overlay */}
-          <div className="absolute inset-0 bg-green-900" style={{ opacity: 0.65, zIndex: 1 }} />
+          <div className="absolute inset-0 bg-primary" style={{ opacity: 0.70, zIndex: 1 }} />
           <div className="relative w-full flex items-center justify-between gap-2" style={{ zIndex: 2 }}>
             <div className="flex items-center flex-shrink-0 h-full">
               <Link
@@ -166,17 +167,17 @@ const MainLayout = ({ children }) => {
                   className="h-full max-h-[36px] w-auto object-contain"
                   style={{ marginRight: '0.5rem', display: 'block', padding: 0, marginTop: 0, marginBottom: 0 }}
                 />
-                <span style={{ color: '#1e293b', textShadow: '0 1px 2px #fff8' }}>Kusin<span style={{ color: '#0ea5e9' }}>AI</span></span>
+                <span className="text-text" style={{ textShadow: '0 1px 2px #fff8' }}>Kusin<span className="text-accent drop-shadow-md">AI</span></span>
               </Link>
             </div>
             <form
               onSubmit={handleSearchSubmit}
-              className="flex items-center bg-white rounded-full flex-shrink min-w-0 w-[160px] sm:w-[260px] md:w-[280px] lg:w-[340px] mx-2 transition-all duration-200 border border-[#bdbdbd] shadow-sm"
+              className="flex items-center bg-background rounded-full flex-shrink min-w-0 w-[160px] sm:w-[260px] md:w-[280px] lg:w-[340px] mx-2 transition-all duration-200 border border-leaf shadow-sm"
               style={{ minWidth: 0 }}
             >
               <button
                 type="submit"
-                className="ml-2 p-1 text-gray-500 hover:text-blue-600 flex-shrink-0 focus:outline-none"
+                className="ml-2 p-1 text-leaf hover:text-accent flex-shrink-0 focus:outline-none"
                 title="Search"
               >
                 <FiSearch size={20} />
@@ -186,12 +187,12 @@ const MainLayout = ({ children }) => {
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder="Insert Ingredient/s..."
-                className="px-3 py-1 text-[#222] w-full focus:outline-none text-sm sm:text-base min-w-0 bg-transparent placeholder-[#888]"
+                className="px-3 py-1 text-text w-full focus:outline-none text-sm sm:text-base min-w-0 bg-transparent placeholder-leaf"
                 style={{ fontWeight: 500 }}
               />
               <button
                 type="button"
-                className="p-2 text-gray-600 hover:text-blue-600 flex-shrink-0"
+                className="p-2 text-leaf hover:text-accent flex-shrink-0"
                 onClick={() => {
                   setScannerOpen(true);
                   setTimeout(startCamera, 300);
@@ -204,7 +205,7 @@ const MainLayout = ({ children }) => {
             <div className="flex items-center gap-4 flex-shrink-0">
               {isLoggedIn() && (
                 <FiUser
-                  className="text-2xl cursor-pointer"
+                  className="text-2xl cursor-pointer text-leaf hover:text-accent"
                   onClick={() =>
                     role === "admin"
                       ? navigate("/admin/dashboard")
@@ -213,7 +214,7 @@ const MainLayout = ({ children }) => {
                 />
               )}
               <FiMenu
-                className="text-2xl cursor-pointer"
+                className="text-2xl cursor-pointer text-leaf hover:text-accent"
                 onClick={() => setSidebarOpen(true)}
               />
             </div>
@@ -221,38 +222,27 @@ const MainLayout = ({ children }) => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-grow bg-black bg-opacity-50 overflow-y-auto">
+  <main className="flex-grow bg-background bg-opacity-90 overflow-y-auto">
           {children}
         </main>
 
         {/* Ingredient Scanner Modal */}
         {scannerOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
-            <div className="bg-white p-4 rounded-lg shadow-md text-center w-full max-w-md">
-              <h2 className="text-xl font-bold mb-2">Scan Your Ingredients</h2>
-              {error && <p className="text-red-500">{error}</p>}
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                className="w-full h-auto rounded"
+          <div className="fixed inset-0 bg-tamarind bg-opacity-90 flex items-center justify-center z-50">
+            <div className="bg-surface p-4 rounded-lg shadow-md text-center w-full max-w-md">
+              <h2 className="text-xl font-bold mb-2 text-primary">Scan Your Ingredients</h2>
+              <IngredientScanner
+                onScan={(text) => {
+                  setSearchInput((prev) => prev ? `${prev}, ${text}` : text);
+                  setScannerOpen(false);
+                }}
               />
-              <canvas ref={canvasRef} className="hidden" />
-              <div className="mt-4 flex justify-center gap-4">
-                <button
-                  onClick={handleCaptureAndScan}
-                  disabled={scanning}
-                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
-                >
-                  {scanning ? "Processing..." : "Capture"}
-                </button>
-                <button
-                  onClick={() => setScannerOpen(false)}
-                  className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded"
-                >
-                  Cancel
-                </button>
-              </div>
+              <button
+                onClick={() => setScannerOpen(false)}
+                className="mt-4 bg-accent hover:bg-leaf text-white px-4 py-2 rounded"
+              >
+                Close
+              </button>
             </div>
           </div>
         )}

@@ -6,9 +6,9 @@ function About() {
   return (
     <PageTransition>
       <MainLayout>
-        <main className="flex-grow flex items-center justify-center bg-black/50 text-white text-center px-4 py-8">
-          <div className="bg-black/50 rounded-lg p-6 max-w-4xl w-full text-sm sm:text-base leading-relaxed shadow-lg">
-            <h1 className="text-3xl font-bold mb-4 text-white flex items-center justify-center gap-2">
+        <main className="flex-grow flex items-center justify-center bg-background/0 text-text text-center px-4 py-8">
+          <div className="bg-surface/90 rounded-lg p-6 max-w-4xl w-full text-sm sm:text-base leading-relaxed shadow-lg">
+            <h1 className="text-3xl font-bold mb-4 text-primary flex items-center justify-center gap-2">
               <span>ABOUT US</span>
               <span role="img" aria-label="chef">👨‍🍳</span>
             </h1>
@@ -26,32 +26,32 @@ function About() {
             </p>
 
             {/* Team Profiles */}
-            <h2 className="text-xl font-bold mt-8 mb-4 text-white">Meet the Team</h2>
+            <h2 className="text-xl font-bold mt-8 mb-4 text-leaf">Meet the Team</h2>
             <div className="flex flex-wrap gap-6 justify-center mb-8">
               {/* Example team members, replace with real info/photos */}
-              <div className="bg-black/40 rounded-lg p-4 w-48 flex flex-col items-center">
-                <img src="/team1.jpg" alt="Team Member" className="w-20 h-20 rounded-full mb-2 object-cover border-2 border-yellow-500" />
-                <div className="font-semibold">Juan Dela Cruz</div>
-                <div className="text-xs text-gray-300">Project Lead</div>
-                <div className="text-xs mt-2">"Turning ideas into code!"</div>
+              <div className="bg-background/80 rounded-lg p-4 w-48 flex flex-col items-center">
+                <img src="/team1.jpg" alt="Team Member" className="w-20 h-20 rounded-full mb-2 object-cover border-2 border-accent" />
+                <div className="font-semibold text-text">Juan Dela Cruz</div>
+                <div className="text-xs text-leaf">Project Lead</div>
+                <div className="text-xs mt-2 text-tamarind">"Turning ideas into code!"</div>
               </div>
-              <div className="bg-black/40 rounded-lg p-4 w-48 flex flex-col items-center">
-                <img src="/team2.jpg" alt="Team Member" className="w-20 h-20 rounded-full mb-2 object-cover border-2 border-yellow-500" />
-                <div className="font-semibold">Maria Santos</div>
-                <div className="text-xs text-gray-300">UI/UX Designer</div>
-                <div className="text-xs mt-2">"Designing for every kitchen!"</div>
+              <div className="bg-background/80 rounded-lg p-4 w-48 flex flex-col items-center">
+                <img src="/team2.jpg" alt="Team Member" className="w-20 h-20 rounded-full mb-2 object-cover border-2 border-accent" />
+                <div className="font-semibold text-text">Maria Santos</div>
+                <div className="text-xs text-leaf">UI/UX Designer</div>
+                <div className="text-xs mt-2 text-tamarind">"Designing for every kitchen!"</div>
               </div>
-              <div className="bg-black/40 rounded-lg p-4 w-48 flex flex-col items-center">
-                <img src="/team3.jpg" alt="Team Member" className="w-20 h-20 rounded-full mb-2 object-cover border-2 border-yellow-500" />
-                <div className="font-semibold">Jose Rizal</div>
-                <div className="text-xs text-gray-300">Backend Developer</div>
-                <div className="text-xs mt-2">"Making data delicious!"</div>
+              <div className="bg-background/80 rounded-lg p-4 w-48 flex flex-col items-center">
+                <img src="/team3.jpg" alt="Team Member" className="w-20 h-20 rounded-full mb-2 object-cover border-2 border-accent" />
+                <div className="font-semibold text-text">Jose Rizal</div>
+                <div className="text-xs text-leaf">Backend Developer</div>
+                <div className="text-xs mt-2 text-tamarind">"Making data delicious!"</div>
               </div>
             </div>
 
             {/* Timeline / Milestones */}
-            <h2 className="text-xl font-bold mb-4 text-white">Project Milestones</h2>
-            <ul className="list-disc ml-6 mb-6 text-left">
+            <h2 className="text-xl font-bold mb-4 text-leaf">Project Milestones</h2>
+            <ul className="list-disc ml-6 mb-6 text-left text-text">
               <li>📝 Idea & Planning - Jan 2025</li>
               <li>🔬 Research & Prototyping - Feb 2025</li>
               <li>💻 Development - Mar to Jul 2025</li>

@@ -50,23 +50,23 @@ function Contact() {
   return (
     <PageTransition>
       <MainLayout>
-        <main className="flex-grow flex items-center justify-center text-white text-center px-6 py-8">
-          <div className="bg-black/50 p-6 rounded-lg max-w-xl w-full shadow-lg text-left space-y-4">
-            <h2 className="text-2xl font-bold text-white text-center mb-2">Contact Us</h2>
+        <main className="flex-grow flex items-center justify-center bg-background/0 text-text text-center px-6 py-8">
+          <div className="bg-surface/90 p-6 rounded-lg max-w-xl w-full shadow-lg text-left space-y-4">
+            <h2 className="text-2xl font-bold text-primary text-center mb-2">Contact Us</h2>
             {/* Social Links */}
             <div className="flex justify-center gap-4 mb-4">
-              <a href="https://facebook.com/kusinai" target="_blank" rel="noopener noreferrer" className="hover:text-blue-400">
+              <a href="https://facebook.com/kusinai" target="_blank" rel="noopener noreferrer" className="hover:text-accent">
                 <span role="img" aria-label="Facebook">📘</span> Facebook
               </a>
-              <a href="https://linkedin.com/company/kusinai" target="_blank" rel="noopener noreferrer" className="hover:text-blue-400">
+              <a href="https://linkedin.com/company/kusinai" target="_blank" rel="noopener noreferrer" className="hover:text-accent">
                 <span role="img" aria-label="LinkedIn">💼</span> LinkedIn
               </a>
             </div>
-            <p><span className="font-semibold">Email:</span> <a href="mailto:support@kusinai.ph" className="underline">support@kusinai.ph</a></p>
-            <p><span className="font-semibold">Phone:</span> <a href="tel:+639123456789" className="underline">+63 912 345 6789</a></p>
-            <p><span className="font-semibold">Address:</span> 3rd Floor, IT Building, Pamantasan ng Lungsod ng Maynila</p>
-            <p><span className="font-semibold">Office Hours:</span> Mon-Fri, 9am-5pm</p>
-            <p>We're open to feedback, partnerships, or feature requests. Feel free to contact us for any concerns.</p>
+            <p><span className="font-semibold text-leaf">Email:</span> <a href="mailto:support@kusinai.ph" className="underline text-accent">support@kusinai.ph</a></p>
+            <p><span className="font-semibold text-leaf">Phone:</span> <a href="tel:+639123456789" className="underline text-accent">+63 912 345 6789</a></p>
+            <p><span className="font-semibold text-leaf">Address:</span> 3rd Floor, IT Building, Pamantasan ng Lungsod ng Maynila</p>
+            <p><span className="font-semibold text-leaf">Office Hours:</span> Mon-Fri, 9am-5pm</p>
+            <p>We're open to <span className="text-accent">feedback</span>, <span className="text-accent">partnerships</span>, or <span className="text-accent">feature requests</span>. Feel free to contact us for any concerns.</p>
           </div>
         </main>
       </MainLayout>
