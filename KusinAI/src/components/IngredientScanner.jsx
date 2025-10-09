@@ -9,6 +9,8 @@ const IngredientScanner = ({ onScan }) => {
   const [stream, setStream] = useState(null);
   const [cameraFacing, setCameraFacing] = useState("environment"); // back camera default
   const [error, setError] = useState("");
+  // Focus rectangle state
+  const [focusRect, setFocusRect] = useState({ x: 0.5, y: 0.5 }); // normalized center
 
   const startCamera = async () => {
     try {
@@ -45,9 +47,11 @@ const IngredientScanner = ({ onScan }) => {
     const canvas = document.createElement("canvas");
     canvas.width = videoRef.current.videoWidth;
     canvas.height = videoRef.current.videoHeight;
-    canvas.getContext("2d").drawImage(videoRef.current, 0, 0);
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(videoRef.current, 0, 0);
 
-    // Convert canvas to base64
+    // Optionally, crop to focus rectangle (UI only, not true camera focus)
+    // For now, just draw a rectangle overlay for user guidance
     const imageBase64 = canvas.toDataURL("image/jpeg").split(",")[1];
 
     try {
@@ -64,12 +68,19 @@ const IngredientScanner = ({ onScan }) => {
       }
 
       setError("");
-      // Pass the first detected ingredient, or join all if you want
       onScan(ingredients.join(", "));
     } catch (err) {
       console.error("Ingredient scan error:", err);
       showError("❌ Failed to process scan. Please try again.");
     }
+  };
+
+  // Handle user click/tap to set focus rectangle
+  const handleVideoClick = (e) => {
+    const rect = e.target.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+    setFocusRect({ x, y });
   };
 
   const showError = (msg) => {
@@ -80,12 +91,31 @@ const IngredientScanner = ({ onScan }) => {
   return (
     <div className="p-4">
       <div className="flex flex-col items-center">
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          className="w-full max-w-sm rounded border"
-        />
+        <div className="relative w-full max-w-sm aspect-video" style={{ minHeight: 200 }}>
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            className="w-full h-full rounded border object-cover"
+            onClick={handleVideoClick}
+            style={{ cursor: 'crosshair' }}
+          />
+          {/* Focus rectangle overlay */}
+          <div
+            style={{
+              position: 'absolute',
+              left: `calc(${focusRect.x * 100}% - 40px)` ,
+              top: `calc(${focusRect.y * 100}% - 40px)` ,
+              width: 80,
+              height: 80,
+              border: '2px solid #facc15', // yellow-400
+              borderRadius: 12,
+              pointerEvents: 'none',
+              boxShadow: '0 0 8px 2px #facc15',
+              transition: 'left 0.2s, top 0.2s',
+            }}
+          />
+        </div>
         <div className="flex flex-wrap justify-center gap-2 mt-3">
           {!stream ? (
             <button
