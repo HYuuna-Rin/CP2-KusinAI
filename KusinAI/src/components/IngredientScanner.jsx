@@ -8,6 +8,7 @@ const IngredientScanner = ({ onScan }) => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
+  const [detected, setDetected] = useState(null);
 
   const showError = (msg) => {
     setError(msg);
@@ -25,6 +26,7 @@ const IngredientScanner = ({ onScan }) => {
 
     setLoading(true);
     setError("");
+    setDetected(null);
     setImagePreview(URL.createObjectURL(file));
 
     try {
@@ -39,22 +41,22 @@ const IngredientScanner = ({ onScan }) => {
             { headers: { "Content-Type": "application/json" } }
           );
 
-          const ingredients = res.data.ingredients;
+          console.log("📸 Scanner API response:", res.data);
 
-          if (
-            !ingredients ||
-            !Array.isArray(ingredients) ||
-            ingredients.length === 0 ||
-            ingredients[0] === "No clear ingredients detected"
-          ) {
+          const { best, message } = res.data;
+          if (!best) {
             showError("⚠️ No clear ingredients detected. Try again.");
             return;
           }
 
-          onScan(ingredients.join(", "));
+          // Store detected ingredient for user confirmation
+          setDetected({ best, message });
         } catch (err) {
           console.error("Scanner API error:", err);
-          showError("❌ Failed to process image. Please try again.");
+          showError(
+            "❌ Failed to process image. " +
+              (err.response?.data?.error || err.message)
+          );
         } finally {
           setLoading(false);
         }
@@ -67,27 +69,34 @@ const IngredientScanner = ({ onScan }) => {
     }
   };
 
+  const handleUseDetected = () => {
+    if (detected?.best) {
+      onScan(detected.best); // Auto-fill search bar with detected ingredient
+      setDetected(null);
+    }
+  };
+
   return (
     <div className="p-6 flex flex-col items-center">
       <h2 className="text-xl font-semibold text-gray-800 mb-4">
         Scan Your Ingredients
       </h2>
 
-      <div className="relative w-full max-w-sm bg-white shadow-md rounded-lg p-4 flex flex-col items-center">
+      <div className="relative w-full max-w-sm bg-white shadow-md rounded-xl p-4 flex flex-col items-center border border-yellow-100">
         {imagePreview ? (
           <img
             src={imagePreview}
             alt="Preview"
-            className="w-full rounded-md object-cover mb-3"
+            className="w-full rounded-md object-cover mb-3 shadow-sm"
           />
         ) : (
-          <div className="w-full aspect-video bg-gray-100 flex items-center justify-center rounded-md text-gray-500">
+          <div className="w-full aspect-video bg-gray-50 flex items-center justify-center rounded-md text-gray-400">
             No image selected
           </div>
         )}
 
-        <label className="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded cursor-pointer mt-3">
-          {loading ? "Scanning..." : "Open Camera"}
+        <label className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded cursor-pointer mt-3 transition-all">
+          {loading ? "🔍 Scanning..." : "📷 Open Camera"}
           <input
             type="file"
             accept="image/*"
@@ -101,15 +110,43 @@ const IngredientScanner = ({ onScan }) => {
           onClick={() => {
             setImagePreview(null);
             setError("");
+            setDetected(null);
           }}
-          className="mt-2 text-gray-500 hover:text-gray-700 text-sm"
+          className="mt-2 text-gray-500 hover:text-gray-700 text-sm transition-all"
         >
           Clear
         </button>
       </div>
 
+      {/* ✅ Success Popup */}
+      {detected && (
+        <div className="mt-4 bg-green-50 border border-green-400 text-green-700 px-4 py-3 rounded-lg shadow-md w-full max-w-sm">
+          <div className="font-semibold text-green-800">
+            ✅ Detected Ingredient:
+          </div>
+          <p className="mt-1 text-lg font-medium capitalize">
+            {detected.best}
+          </p>
+          <div className="flex justify-end gap-2 mt-3">
+            <button
+              onClick={handleUseDetected}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded-md text-sm"
+            >
+              Use
+            </button>
+            <button
+              onClick={() => setDetected(null)}
+              className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-1 rounded-md text-sm"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ⚠️ Error Popup */}
       {error && (
-        <div className="mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg shadow-md w-full max-w-sm text-sm">
+        <div className="mt-4 bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded-lg shadow-md w-full max-w-sm text-sm">
           <div className="font-bold">Error</div>
           <p>{error}</p>
         </div>
