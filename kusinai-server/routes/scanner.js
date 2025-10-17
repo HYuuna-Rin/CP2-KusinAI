@@ -46,6 +46,7 @@ router.post("/scan", async (req, res) => {
     if (!imageBase64) {
       return res.status(400).json({ error: "Image is required" });
     }
+console.log("📤 Received base64 image length:", imageBase64.length);
 
     const response = await fetch(
       `https://vision.googleapis.com/v1/images:annotate?key=${process.env.GOOGLE_VISION_API_KEY}`,
@@ -73,57 +74,66 @@ router.post("/scan", async (req, res) => {
     const resp = data.responses?.[0] || {};
 
     // Collect label descriptions
-    const labels = (resp.labelAnnotations || []).map((l) => normalize(l.description));
+    const labels = (resp.labelAnnotations || []).map((l) => ({
+      name: normalize(l.description),
+      score: l.score || 0,
+    }));
 
     // Collect localized object names
-    const objects = (resp.localizedObjectAnnotations || []).map((o) => normalize(o.name));
+    const objects = (resp.localizedObjectAnnotations || []).map((o) => ({
+      name: normalize(o.name),
+      score: o.score || 0,
+    }));
 
-    // Collect text detection (words from OCR)
+    // Collect text detection (OCR)
     const texts = [];
     if (resp.textAnnotations && resp.textAnnotations.length > 0) {
-      // textAnnotations[0].description usually contains the full text
       const whole = resp.textAnnotations[0].description || "";
-      whole
-        .split(/\s+/)
-        .map((t) => normalize(t))
-        .forEach((t) => texts.push(t));
+      whole.split(/\s+/).forEach((t) =>
+        texts.push({ name: normalize(t), score: 0.5 }) // give neutral weight
+      );
     }
 
-    // Merge all candidates
+    // Merge all and singularize
     const allCandidates = [...labels, ...objects, ...texts]
-      .filter(Boolean)
-      .map((t) => singularize(t));
+      .map((c) => ({ ...c, name: singularize(c.name) }))
+      .filter((c) => c.name && !IGNORE_WORDS.has(c.name) && c.name.length > 1 && !/^\d+$/.test(c.name));
 
-    // Filter noise and ignore words, keep short meaningful tokens (1-3 words)
-    const filtered = [...new Set(
-      allCandidates.filter((tok) => {
-        if (!tok) return false;
-        if (IGNORE_WORDS.has(tok)) return false;
-        // remove purely numeric tokens
-        if (/^\d+$/.test(tok)) return false;
-        // remove tokens shorter than 2
-        if (tok.length < 2) return false;
-        return true;
-      })
-    )];
-
-    // Heuristic: prefer object names, then labels, then OCR text
-    const prioritized = [];
-    objects.forEach((o) => { if (filtered.includes(o)) prioritized.push(o); });
-    labels.forEach((l) => { if (filtered.includes(l) && !prioritized.includes(l)) prioritized.push(l); });
-    texts.forEach((t) => { if (filtered.includes(t) && !prioritized.includes(t)) prioritized.push(t); });
-
-    const ingredients = prioritized.length ? prioritized : filtered;
-
-    if (!ingredients || ingredients.length === 0) {
-      return res.json({ ingredients: ["No clear ingredients detected"], debug: { labels, objects, texts } });
+    // Remove duplicates (keep highest score)
+    const map = new Map();
+    for (const c of allCandidates) {
+      if (!map.has(c.name) || map.get(c.name).score < c.score) {
+        map.set(c.name, c);
+      }
     }
 
-    res.json({ ingredients });
+    const ingredients = Array.from(map.values())
+      .sort((a, b) => b.score - a.score)
+      .map((i) => i.name);
+
+    if (ingredients.length === 0) {
+      return res.json({
+        best: null,
+        ingredients: [],
+        message: "No clear ingredients detected",
+      });
+    }
+
+    // Pick top ingredient as "best"
+    const best = ingredients[0];
+    res.json({
+      best,
+      ingredients,
+      message: "Detected ingredients from image",
+    });
   } catch (err) {
     console.error("❌ Google Vision Error:", err);
-    res.status(500).json({ error: "Failed to scan ingredients", details: String(err) });
+    res.status(500).json({
+      error: "Failed to scan ingredients",
+      details: String(err),
+    });
   }
 });
+
 
 export default router;
