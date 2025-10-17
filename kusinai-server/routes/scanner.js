@@ -1,30 +1,29 @@
 // routes/scanner.js
 import express from "express";
 import fetch from "node-fetch";
+// import Ingredient from "../models/Ingredient.js"; // <-- Uncomment if you have ingredient DB
 
 const router = express.Router();
 
-// Generic tokens/words to ignore
-const IGNORE_WORDS = new Set([
-  "dish",
+// Words that are too generic to be "real" ingredients
+const GENERIC_WORDS = new Set([
+  "fruit",
   "food",
+  "natural food",
+  "produce",
   "cuisine",
   "meal",
   "ingredient",
+  "dish",
   "recipe",
-  "produce",
-  "pack",
-  "package",
-  "fresh",
-  "g",
-  "kg",
-  "ml",
-  "cup",
-  "tablespoon",
-  "teaspoon",
+  "staple food",
+  "plant",
+  "vegetable",
+  "meat",
+  "seafood",
 ]);
 
-// Simple singularize helper for common plurals
+// Simple helpers
 const singularize = (word) => {
   if (!word) return word;
   if (word.endsWith("ies")) return word.slice(0, -3) + "y";
@@ -33,12 +32,8 @@ const singularize = (word) => {
   return word;
 };
 
-// Normalize tokens: lowercase, trim, remove punctuation
 const normalize = (str) =>
-  str
-    .toLowerCase()
-    .replace(/[\.,;:\/()\[\]"'`]/g, "")
-    .trim();
+  str.toLowerCase().replace(/[\.,;:\/()\[\]"'`]/g, "").trim();
 
 router.post("/scan", async (req, res) => {
   try {
@@ -46,7 +41,8 @@ router.post("/scan", async (req, res) => {
     if (!imageBase64) {
       return res.status(400).json({ error: "Image is required" });
     }
-console.log("📤 Received base64 image length:", imageBase64.length);
+
+    console.log("📤 Received base64 image length:", imageBase64.length);
 
     const response = await fetch(
       `https://vision.googleapis.com/v1/images:annotate?key=${process.env.GOOGLE_VISION_API_KEY}`,
@@ -58,8 +54,8 @@ console.log("📤 Received base64 image length:", imageBase64.length);
             {
               image: { content: imageBase64 },
               features: [
-                { type: "LABEL_DETECTION", maxResults: 15 },
                 { type: "OBJECT_LOCALIZATION", maxResults: 15 },
+                { type: "LABEL_DETECTION", maxResults: 15 },
                 { type: "TEXT_DETECTION", maxResults: 5 },
               ],
             },
@@ -69,35 +65,33 @@ console.log("📤 Received base64 image length:", imageBase64.length);
     );
 
     const data = await response.json();
-    console.log("📷 Vision API raw response:", JSON.stringify(data, null, 2));
-
     const resp = data.responses?.[0] || {};
 
-    // Collect label descriptions
-    const labels = (resp.labelAnnotations || []).map((l) => ({
-      name: normalize(l.description),
-      score: l.score || 0,
-    }));
-
-    // Collect localized object names
+    // Gather objects (usually most accurate)
     const objects = (resp.localizedObjectAnnotations || []).map((o) => ({
-      name: normalize(o.name),
+      name: singularize(normalize(o.name)),
       score: o.score || 0,
     }));
 
-    // Collect text detection (OCR)
+    // Gather labels
+    const labels = (resp.labelAnnotations || []).map((l) => ({
+      name: singularize(normalize(l.description)),
+      score: l.score || 0,
+    }));
+
+    // Gather text (OCR)
     const texts = [];
     if (resp.textAnnotations && resp.textAnnotations.length > 0) {
       const whole = resp.textAnnotations[0].description || "";
       whole.split(/\s+/).forEach((t) =>
-        texts.push({ name: normalize(t), score: 0.5 }) // give neutral weight
+        texts.push({ name: singularize(normalize(t)), score: 0.5 })
       );
     }
 
-    // Merge all and singularize
-    const allCandidates = [...labels, ...objects, ...texts]
-      .map((c) => ({ ...c, name: singularize(c.name) }))
-      .filter((c) => c.name && !IGNORE_WORDS.has(c.name) && c.name.length > 1 && !/^\d+$/.test(c.name));
+    // Merge and filter
+    const allCandidates = [...objects, ...labels, ...texts]
+      .filter((c) => c.name && c.name.length > 1 && !/^\d+$/.test(c.name))
+      .filter((c) => !GENERIC_WORDS.has(c.name));
 
     // Remove duplicates (keep highest score)
     const map = new Map();
@@ -111,7 +105,19 @@ console.log("📤 Received base64 image length:", imageBase64.length);
       .sort((a, b) => b.score - a.score)
       .map((i) => i.name);
 
-    if (ingredients.length === 0) {
+    // Optional: verify with DB if exists
+    /*
+    const verified = [];
+    for (const i of ingredients) {
+      const exists = await Ingredient.findOne({ name: new RegExp(`^${i}$`, "i") });
+      if (exists) verified.push(i);
+    }
+    const finalIngredients = verified.length ? verified : ingredients;
+    */
+
+    const finalIngredients = ingredients;
+
+    if (!finalIngredients.length) {
       return res.json({
         best: null,
         ingredients: [],
@@ -119,21 +125,24 @@ console.log("📤 Received base64 image length:", imageBase64.length);
       });
     }
 
-    // Pick top ingredient as "best"
-    const best = ingredients[0];
+    // Prefer the most confident non-generic match
+    const best =
+      finalIngredients.find(
+        (i) => !GENERIC_WORDS.has(i.toLowerCase())
+      ) || finalIngredients[0];
+
     res.json({
       best,
-      ingredients,
+      ingredients: finalIngredients,
       message: "Detected ingredients from image",
     });
   } catch (err) {
-    console.error("❌ Google Vision Error:", err);
+    console.error("❌ Vision Error:", err);
     res.status(500).json({
       error: "Failed to scan ingredients",
       details: String(err),
     });
   }
 });
-
 
 export default router;

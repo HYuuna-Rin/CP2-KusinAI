@@ -32,16 +32,36 @@ const MainLayout = ({ children }) => {
     }
   };
 
-  const handleScanResult = (ingredient) => {
-    if (ingredient) {
-      setSearchInput((prev) =>
-        prev ? `${prev}, ${ingredient}` : ingredient
-      );
-      setAddedIngredient(ingredient);
-      setTimeout(() => setAddedIngredient(null), 3000);
-    }
-    setScannerOpen(false);
-  };
+  const handleScanResult = (ingredientString) => {
+  if (!ingredientString) return;
+
+  // Split scanned ingredients and normalize
+  const newIngredients = ingredientString
+    .split(",")
+    .map((i) => i.trim().toLowerCase())
+    .filter(Boolean);
+
+  // Split existing ingredients from the search bar
+  const existingIngredients = searchInput
+    .split(",")
+    .map((i) => i.trim().toLowerCase())
+    .filter(Boolean);
+
+  // Merge and remove duplicates
+  const merged = Array.from(new Set([...existingIngredients, ...newIngredients]));
+
+  // Update search bar
+  const newInput = merged.join(", ");
+  setSearchInput(newInput);
+
+  // Show success banner
+  setAddedIngredient(newIngredients.join(", "));
+  setTimeout(() => setAddedIngredient(null), 3000);
+
+  // Close scanner modal
+  setScannerOpen(false);
+};
+
 
   return (
     <div className="flex min-h-screen relative bg-background">

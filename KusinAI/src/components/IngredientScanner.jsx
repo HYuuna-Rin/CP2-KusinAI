@@ -9,6 +9,7 @@ const IngredientScanner = ({ onScan }) => {
   const [loading, setLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   const [detected, setDetected] = useState(null);
+  const [selected, setSelected] = useState([]);
 
   const showError = (msg) => {
     setError(msg);
@@ -27,6 +28,7 @@ const IngredientScanner = ({ onScan }) => {
     setLoading(true);
     setError("");
     setDetected(null);
+    setSelected([]);
     setImagePreview(URL.createObjectURL(file));
 
     try {
@@ -43,14 +45,14 @@ const IngredientScanner = ({ onScan }) => {
 
           console.log("📸 Scanner API response:", res.data);
 
-          const { best, message } = res.data;
-          if (!best) {
+          const { best, ingredients, message } = res.data;
+          if (!ingredients || ingredients.length === 0) {
             showError("⚠️ No clear ingredients detected. Try again.");
             return;
           }
 
-          // Store detected ingredient for user confirmation
-          setDetected({ best, message });
+          // Store all detected ingredients for user selection
+          setDetected({ best, ingredients, message });
         } catch (err) {
           console.error("Scanner API error:", err);
           showError(
@@ -69,11 +71,22 @@ const IngredientScanner = ({ onScan }) => {
     }
   };
 
+  const toggleSelection = (ingredient) => {
+    setSelected((prev) =>
+      prev.includes(ingredient)
+        ? prev.filter((i) => i !== ingredient)
+        : [...prev, ingredient]
+    );
+  };
+
   const handleUseDetected = () => {
-    if (detected?.best) {
-      onScan(detected.best); // Auto-fill search bar with detected ingredient
-      setDetected(null);
+    if (selected.length > 0) {
+      onScan(selected.join(", "));
+    } else if (detected?.best) {
+      onScan(detected.best);
     }
+    setDetected(null);
+    setSelected([]);
   };
 
   return (
@@ -111,6 +124,7 @@ const IngredientScanner = ({ onScan }) => {
             setImagePreview(null);
             setError("");
             setDetected(null);
+            setSelected([]);
           }}
           className="mt-2 text-gray-500 hover:text-gray-700 text-sm transition-all"
         >
@@ -118,31 +132,51 @@ const IngredientScanner = ({ onScan }) => {
         </button>
       </div>
 
-      {/* ✅ Success Popup */}
-      {detected && (
-        <div className="mt-4 bg-green-50 border border-green-400 text-green-700 px-4 py-3 rounded-lg shadow-md w-full max-w-sm">
-          <div className="font-semibold text-green-800">
-            ✅ Detected Ingredient:
-          </div>
-          <p className="mt-1 text-lg font-medium capitalize">
-            {detected.best}
-          </p>
-          <div className="flex justify-end gap-2 mt-3">
-            <button
-              onClick={handleUseDetected}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded-md text-sm"
-            >
-              Use
-            </button>
-            <button
-              onClick={() => setDetected(null)}
-              className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-1 rounded-md text-sm"
-            >
-              Retry
-            </button>
-          </div>
-        </div>
-      )}
+      {/* ✅ Detected Ingredients */}
+{detected && (
+  <div className="mt-4 bg-green-50 border border-green-400 text-green-700 px-4 py-3 rounded-lg shadow-md w-full max-w-sm flex flex-col">
+    <div className="font-semibold text-green-800 mb-2">
+      ✅ Detected Ingredients:
+    </div>
+
+    {/* Scrollable ingredient list */}
+    <div className="flex-1 max-h-60 overflow-y-auto flex flex-wrap gap-2 justify-center pb-3">
+      {detected.ingredients.map((item, idx) => (
+        <button
+          key={idx}
+          onClick={() => toggleSelection(item)}
+          className={`px-3 py-1 rounded-full border text-sm transition-all ${
+            selected.includes(item)
+              ? "bg-green-600 text-white border-green-700"
+              : "bg-white border-green-400 text-green-700 hover:bg-green-100"
+          }`}
+        >
+          {item}
+        </button>
+      ))}
+    </div>
+
+    {/* Fixed footer for buttons */}
+    <div className="flex justify-end gap-2 mt-3 border-t border-green-200 pt-3 sticky bottom-0 bg-green-50">
+      <button
+        onClick={handleUseDetected}
+        className="bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded-md text-sm"
+      >
+        Use Selected
+      </button>
+      <button
+        onClick={() => {
+          setDetected(null);
+          setSelected([]);
+        }}
+        className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-1 rounded-md text-sm"
+      >
+        Retry
+      </button>
+    </div>
+  </div>
+)}
+
 
       {/* ⚠️ Error Popup */}
       {error && (
