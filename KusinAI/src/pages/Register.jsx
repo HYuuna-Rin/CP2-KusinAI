@@ -22,7 +22,7 @@ function Register() {
       return;
     }
     try {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
@@ -30,9 +30,9 @@ function Register() {
       const data = await res.json();
 
       if (res.status === 201) {
-        alert("Registration successful!");
-        navigate("/login"); // Redirect to login page
-      } else {
+        alert("Registration successful! Please check your email to verify your account before logging in.");
+        navigate("/login");
+      }else {
         alert(data.message || "Registration failed");
       }
     } catch (err) {

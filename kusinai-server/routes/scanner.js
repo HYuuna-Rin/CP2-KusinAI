@@ -1,11 +1,9 @@
-// routes/scanner.js
 import express from "express";
 import fetch from "node-fetch";
-// import Ingredient from "../models/Ingredient.js"; // <-- Uncomment if you have ingredient DB
 
 const router = express.Router();
 
-// Words that are too generic to be "real" ingredients
+// Words too generic to count as ingredients
 const GENERIC_WORDS = new Set([
   "fruit",
   "food",
@@ -23,7 +21,7 @@ const GENERIC_WORDS = new Set([
   "seafood",
 ]);
 
-// Simple helpers
+// Helper functions
 const singularize = (word) => {
   if (!word) return word;
   if (word.endsWith("ies")) return word.slice(0, -3) + "y";
@@ -35,6 +33,7 @@ const singularize = (word) => {
 const normalize = (str) =>
   str.toLowerCase().replace(/[\.,;:\/()\[\]"'`]/g, "").trim();
 
+// 📸 POST /api/scanner/scan
 router.post("/scan", async (req, res) => {
   try {
     const { imageBase64 } = req.body;
@@ -67,33 +66,39 @@ router.post("/scan", async (req, res) => {
     const data = await response.json();
     const resp = data.responses?.[0] || {};
 
-    // Gather objects (usually most accurate)
+    // 🟢 Objects (most accurate for specific items)
     const objects = (resp.localizedObjectAnnotations || []).map((o) => ({
       name: singularize(normalize(o.name)),
       score: o.score || 0,
+      source: "object",
     }));
 
-    // Gather labels
+    // 🟡 Labels (general scene/context)
     const labels = (resp.labelAnnotations || []).map((l) => ({
       name: singularize(normalize(l.description)),
       score: l.score || 0,
+      source: "label",
     }));
 
-    // Gather text (OCR)
+    // 🔵 Text (OCR fallback, medium confidence)
     const texts = [];
     if (resp.textAnnotations && resp.textAnnotations.length > 0) {
       const whole = resp.textAnnotations[0].description || "";
       whole.split(/\s+/).forEach((t) =>
-        texts.push({ name: singularize(normalize(t)), score: 0.5 })
+        texts.push({
+          name: singularize(normalize(t)),
+          score: 0.5, // baseline for detected text
+          source: "text",
+        })
       );
     }
 
-    // Merge and filter
+    // 🧠 Merge + filter generic / invalid
     const allCandidates = [...objects, ...labels, ...texts]
       .filter((c) => c.name && c.name.length > 1 && !/^\d+$/.test(c.name))
       .filter((c) => !GENERIC_WORDS.has(c.name));
 
-    // Remove duplicates (keep highest score)
+    // Remove duplicates: keep the highest confidence per ingredient
     const map = new Map();
     for (const c of allCandidates) {
       if (!map.has(c.name) || map.get(c.name).score < c.score) {
@@ -101,23 +106,9 @@ router.post("/scan", async (req, res) => {
       }
     }
 
-    const ingredients = Array.from(map.values())
-      .sort((a, b) => b.score - a.score)
-      .map((i) => i.name);
+    const finalArray = Array.from(map.values()).sort((a, b) => b.score - a.score);
 
-    // Optional: verify with DB if exists
-    /*
-    const verified = [];
-    for (const i of ingredients) {
-      const exists = await Ingredient.findOne({ name: new RegExp(`^${i}$`, "i") });
-      if (exists) verified.push(i);
-    }
-    const finalIngredients = verified.length ? verified : ingredients;
-    */
-
-    const finalIngredients = ingredients;
-
-    if (!finalIngredients.length) {
+    if (finalArray.length === 0) {
       return res.json({
         best: null,
         ingredients: [],
@@ -125,19 +116,19 @@ router.post("/scan", async (req, res) => {
       });
     }
 
-    // Prefer the most confident non-generic match
+    // Pick the best (non-generic) match
     const best =
-      finalIngredients.find(
-        (i) => !GENERIC_WORDS.has(i.toLowerCase())
-      ) || finalIngredients[0];
+      finalArray.find((i) => !GENERIC_WORDS.has(i.name.toLowerCase()))?.name ||
+      finalArray[0].name;
 
+    // ✅ Send back names + confidence scores
     res.json({
       best,
-      ingredients: finalIngredients,
+      ingredients: finalArray, // [{ name, score, source }]
       message: "Detected ingredients from image",
     });
   } catch (err) {
-    console.error("❌ Vision Error:", err);
+    console.error("❌ Vision API Error:", err);
     res.status(500).json({
       error: "Failed to scan ingredients",
       details: String(err),

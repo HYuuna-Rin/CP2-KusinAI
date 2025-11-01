@@ -16,6 +16,7 @@ import ManageRecipes from "./pages/ManageRecipes";
 import AddRecipe from "./pages/AddRecipe";
 import EditRecipe from "./pages/EditRecipe";
 import ProtectedRoute from "./components/ProtectedRoute";
+import VerifyEmail from './pages/VerifyEmail';
 
 function App() {
   return (
@@ -26,6 +27,8 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
+
 
         {/* User Protected Routes */}
         <Route path="/feedback" element={<PrivateRoute><Feedback /></PrivateRoute>} />

@@ -16,7 +16,7 @@ const userSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
   },
 
   email: {
@@ -24,34 +24,48 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true, // prevents duplicate emails
     lowercase: true,
-    trim: true
+    trim: true,
   },
 
   password: {
     type: String,
     required: true,
-    minlength: 6
+    minlength: 6,
+  },
+
+  // ✅ Place verification fields BEFORE createdAt
+  isVerified: {
+    type: Boolean,
+    default: false,
+  },
+
+  verificationToken: {
+    type: String,
+    default: "",
   },
 
   createdAt: {
     type: Date,
-    default: Date.now
+    default: Date.now,
   },
 
   profileImage: {
-    type: String, default: ""
+    type: String,
+    default: "",
   },
 
   notes: {
-    type: String, default: ""
+    type: String,
+    default: "",
   },
 
-  favorites: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Recipe"
-  }]
+  favorites: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Recipe",
+    },
+  ],
 });
 
 const User = mongoose.model("User", userSchema);
-// Export the model so we can use it in other files
 export default User;

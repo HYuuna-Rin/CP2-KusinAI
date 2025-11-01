@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { BASE_URL } from "../Config.js";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { jwtDecode } from "jwt-decode";
-
 
 function Login() {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -19,11 +17,8 @@ function Login() {
     if (token) {
       try {
         const decoded = jwtDecode(token);
-        if (decoded.role === "admin") {
-          navigate("/admin/dashboard");
-        } else {
-          navigate("/");
-        }
+        if (decoded.role === "admin") navigate("/admin/dashboard");
+        else navigate("/");
       } catch {
         navigate("/");
       }
@@ -37,40 +32,45 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg("");
+
     try {
-  const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/login`, formData, {
-        headers: { "Content-Type": "application/json" },
-      });
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/auth/login`,
+        formData,
+        { headers: { "Content-Type": "application/json" } }
+      );
 
-      const { token } = res.data;
+      // ✅ If backend responds successfully and includes a token
+      if (res.data.token) {
+        const { token } = res.data;
 
-      if (token) {
-        // Save to localStorage or sessionStorage depending on Remember Me toggle
-        if (rememberMe) {
-          localStorage.setItem("token", token);
-        } else {
-          sessionStorage.setItem("token", token);
-        }
+        if (rememberMe) localStorage.setItem("token", token);
+        else sessionStorage.setItem("token", token);
 
         const decoded = jwtDecode(token);
-
-        setErrorMsg("");
         alert("Login successful!");
 
-        if (decoded.role === "admin") {
-          navigate("/admin/dashboard");
-        } else {
-          navigate("/");
-        }
+        if (decoded.role === "admin") navigate("/admin/dashboard");
+        else navigate("/");
       } else {
         setErrorMsg(res.data.message || "Login failed");
       }
     } catch (err) {
       console.error("Login error:", err);
-      if (err.response && err.response.data && err.response.data.message) {
-        setErrorMsg(err.response.data.message);
+
+      // ✅ Handle backend response messages cleanly
+      if (err.response) {
+        if (err.response.status === 403) {
+          // User not verified
+          alert(err.response.data.message || "Email not verified. Please check your inbox.");
+          setErrorMsg("Email not verified. Please verify your account first.");
+        } else if (err.response.status === 400) {
+          setErrorMsg(err.response.data.message || "Invalid credentials.");
+        } else {
+          setErrorMsg(err.response.data.message || "Login failed. Try again later.");
+        }
       } else {
-        setErrorMsg("Login error");
+        setErrorMsg("Network error. Please check your connection.");
       }
     }
   };
@@ -85,6 +85,7 @@ function Login() {
           style={{ opacity: 0.18 }}
         />
       </div>
+
       <div className="flex justify-between items-center p-4">
         <div
           onClick={() => navigate("/")}
@@ -93,17 +94,20 @@ function Login() {
           🍳 KusinAI
         </div>
       </div>
+
       <div className="flex-grow flex justify-center items-center relative z-10">
         <form
           onSubmit={handleSubmit}
           className="bg-background/80 backdrop-blur-[2px] p-8 rounded-lg shadow-md w-full max-w-md space-y-4"
         >
           <h1 className="text-2xl font-bold text-primary text-center">Login</h1>
+
           {errorMsg && (
             <div className="bg-accent/20 border border-accent text-accent px-4 py-2 rounded text-center mb-2 animate-pulse">
               {errorMsg}
             </div>
           )}
+
           <input
             name="email"
             type="email"
@@ -112,6 +116,7 @@ function Login() {
             className="w-full p-3 border border-leaf/40 rounded bg-background text-text focus:border-leaf"
             required
           />
+
           <div className="relative">
             <input
               name="password"
@@ -148,6 +153,7 @@ function Login() {
           >
             Login
           </button>
+
           <p className="text-sm text-center">
             Don’t have an account?{" "}
             <a href="/register" className="text-accent font-medium hover:underline">
