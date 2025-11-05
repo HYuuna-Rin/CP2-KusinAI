@@ -1,8 +1,9 @@
+import "dotenv/config";
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
-import dotenv from "dotenv";
-dotenv.config();
+import path from "path";
+import { fileURLToPath } from "url";
 
 import recipeRoutes from "./routes/recipeRoutes.js";
 import authRoutes from "./routes/auth.js";
@@ -11,6 +12,7 @@ import chatRoutes from "./routes/chat.js";
 import scannerRoutes from "./routes/scanner.js";
 import adminRoutes from "./routes/admin.js";
 import feedbackRoutes from "./routes/feedback.js";
+import testEmailRoutes from "./routes/testEmail.js";
 
 const app = express();
 
@@ -26,6 +28,7 @@ app.use("/api/chat", chatRoutes);
 app.use("/api/scanner", scannerRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/feedback", feedbackRoutes);
+app.use("/api/test-email", testEmailRoutes);
 
 // ✅ MongoDB connection
 mongoose
@@ -36,3 +39,14 @@ mongoose
 // ✅ Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
+// Serve frontend in production
+if (process.env.NODE_ENV === "production") {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const clientBuildPath = path.join(__dirname, "..", "KusinAI", "dist");
+  app.use(express.static(clientBuildPath));
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(clientBuildPath, "index.html"));
+  });
+}

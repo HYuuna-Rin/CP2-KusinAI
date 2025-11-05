@@ -34,20 +34,33 @@ const isAdmin = (req, res, next) => {
 
 // Utility: send verification email
 async function sendVerificationEmail(user, frontendURL) {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.error("❌ Missing EMAIL_USER or EMAIL_PASS in .env");
+    throw new Error("Email configuration missing");
+  }
+
   const token = jwt.sign(
     { id: user._id, email: user.email },
     process.env.JWT_SECRET,
-    { expiresIn: "24h" } // expires in 24 hours
+    { expiresIn: "24h" }
   );
 
   const verifyLink = `${frontendURL}/verify-email?token=${token}`;
 
   const transporter = nodemailer.createTransport({
-    service: "gmail",
+    host: process.env.EMAIL_HOST || "smtp.gmail.com",
+    port: process.env.EMAIL_PORT || 465,
+    secure: true, // use SSL
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
+  });
+
+  // Optional: verify connection
+  transporter.verify((err, success) => {
+    if (err) console.error("❌ Email transport error:", err);
+    else console.log("✅ Email transporter ready");
   });
 
   await transporter.sendMail({
@@ -55,16 +68,19 @@ async function sendVerificationEmail(user, frontendURL) {
     to: user.email,
     subject: "Verify your KusinAI account",
     html: `
-      <h2>Welcome to KusinAI, ${user.name}!</h2>
-      <p>Please verify your email by clicking the button below (expires in 24 hours):</p>
+      <h2>Welcome to <span style="color:#16a34a">KusinAI</span>, ${user.name}!</h2>
+      <p>Please verify your email within 24 hours:</p>
       <a href="${verifyLink}"
-         style="background-color:#22c55e;color:white;padding:10px 16px;border-radius:6px;text-decoration:none;font-weight:bold;">
-         Verify Email
+         style="display:inline-block;background:#16a34a;color:white;
+                padding:10px 16px;border-radius:8px;text-decoration:none;
+                font-weight:bold;margin-top:8px;">
+        ✅ Verify Email
       </a>
-      <p>If you didn’t create this account, please ignore this email.</p>
+      <p style="margin-top:16px;color:#666;">If you didn’t create this account, ignore this email.</p>
     `,
   });
 }
+
 
 // Register route
 router.post("/register", async (req, res) => {
@@ -74,6 +90,12 @@ router.post("/register", async (req, res) => {
     // 1️⃣ Basic format validation
     if (!validator.isEmail(email))
       return res.status(400).json({ message: "Invalid email format" });
+
+    // Password strength validation: at least 8 chars, upper, lower, number, special
+    const passRule = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+    if (!passRule.test(password)) {
+      return res.status(400).json({ message: "Password must be at least 8 characters and include uppercase, lowercase, a number and a special character." });
+    }
 
     // 2️⃣ Check MX records
     const domain = email.split("@")[1];
@@ -150,8 +172,8 @@ router.post("/login", async (req, res) => {
     if (!isMatch)
       return res.status(400).json({ message: "Invalid credentials" });
 
-    // 🔒 If not verified, resend verification email
-    if (!user.isVerified) {
+    // 🔒 If not verified, resend verification email (allow admin to bypass verification)
+    if (!user.isVerified && user.role !== "admin") {
       await sendVerificationEmail(user, process.env.FRONTEND_URL);
       return res.status(403).json({
         message: "Email not verified. A new verification link has been sent to your inbox.",
@@ -322,5 +344,5 @@ router.get("/comments", authenticateToken, async (req, res) => {
   }
 });
 
-export { authenticateToken };
+export { authenticateToken, isAdmin };
 export default router;

@@ -8,7 +8,7 @@ export default {
     extend: {
       colors: {
         primary: "#7BB661",     // Fresh Basil Green – main brand color
-        accent: "#F4A261",      // Warm Orange – buttons & highlights
+    accent: "#E07A41",      // Warm Orange – buttons & highlights (darker for contrast)
         background: "#FFF8F0",  // Soft Rice White – app background
         surface: "#F2CC8F",     // Latte Beige – cards, modals
         text: "#3D2C2E",        // Cocoa Brown – main text

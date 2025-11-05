@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { jwtDecode } from "jwt-decode";
+import { useToast } from "../context/ToastContext";
 
 function Login() {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -10,6 +11,7 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   // ✅ Redirect logged-in users away from Login page
   useEffect(() => {
@@ -47,11 +49,11 @@ function Login() {
         if (rememberMe) localStorage.setItem("token", token);
         else sessionStorage.setItem("token", token);
 
-        const decoded = jwtDecode(token);
-        alert("Login successful!");
+  const decoded = jwtDecode(token);
+  showToast({ message: "Login successful!", type: "success" });
 
-        if (decoded.role === "admin") navigate("/admin/dashboard");
-        else navigate("/");
+  if (decoded.role === "admin") navigate("/admin/dashboard");
+  else navigate("/");
       } else {
         setErrorMsg(res.data.message || "Login failed");
       }
@@ -62,12 +64,17 @@ function Login() {
       if (err.response) {
         if (err.response.status === 403) {
           // User not verified
-          alert(err.response.data.message || "Email not verified. Please check your inbox.");
+          const msg = err.response.data.message || "Email not verified. Please check your inbox.";
+          showToast({ message: msg, type: "warning" });
           setErrorMsg("Email not verified. Please verify your account first.");
         } else if (err.response.status === 400) {
-          setErrorMsg(err.response.data.message || "Invalid credentials.");
+          const msg = err.response.data.message || "Invalid credentials.";
+          showToast({ message: msg, type: "error" });
+          setErrorMsg(msg);
         } else {
-          setErrorMsg(err.response.data.message || "Login failed. Try again later.");
+          const msg = err.response.data.message || "Login failed. Try again later.";
+          showToast({ message: msg, type: "error" });
+          setErrorMsg(msg);
         }
       } else {
         setErrorMsg("Network error. Please check your connection.");

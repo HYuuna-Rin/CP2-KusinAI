@@ -65,6 +65,13 @@ const RecipeDetail = () => {
     fetchRecipe();
   }, [title]);
 
+  // helper to normalize possible userId shapes (object or string)
+  const idOf = (val) => {
+    if (!val) return null;
+    if (typeof val === "object") return String(val._id || val.id || "");
+    return String(val);
+  };
+
   const fetchComments = async (recipeId) => {
     try {
       const res = await axios.get(`${API_URL}/api/recipes/${recipeId}/comments`);
@@ -356,13 +363,13 @@ const RecipeDetail = () => {
                       alt="Profile"
                       className="w-6 h-6 rounded-full object-cover border border-leaf cursor-pointer"
                       onClick={() => navigate(
-                        user?.id === com.userId ? "/profile" : `/profile/${com.userId}`
+                        user && idOf(com.userId) === user.id ? "/profile" : `/profile/${idOf(com.userId)}`
                       )}
                     />
                     <span
                       className="font-semibold ml-2 hover:underline cursor-pointer text-leaf"
                       onClick={() => navigate(
-                        user?.id === com.userId ? "/profile" : `/profile/${com.userId}`
+                        user && idOf(com.userId) === user.id ? "/profile" : `/profile/${idOf(com.userId)}`
                       )}
                     >
                       {com.username}
@@ -409,14 +416,14 @@ const RecipeDetail = () => {
                     <div className="flex items-center gap-4">
                       <button
                         onClick={() => handleLike(com._id)}
-                        className={`flex items-center gap-1 ${com.likes && user && com.likes.includes(user.id) ? 'text-accent' : 'hover:text-accent'}`}
-                        aria-label={com.likes && user && com.likes.includes(user.id) ? 'Unlike' : 'Like'}
+                        className={`flex items-center gap-1 ${(com.likes && user && com.likes.map(String).includes(user.id)) ? 'text-accent' : 'hover:text-accent'}`}
+                        aria-label={(com.likes && user && com.likes.map(String).includes(user.id)) ? 'Unlike' : 'Like'}
                       >
-                        {com.likes && user && com.likes.includes(user.id) ? <FaHeart /> : <FaRegHeart />}
+                        {(com.likes && user && com.likes.map(String).includes(user.id)) ? <FaHeart /> : <FaRegHeart />}
                         {com.likes?.length || 0}
                       </button>
                       <button onClick={() => setReplyText((prev) => ({ ...prev, [com._id]: "" }))} className="hover:text-primary">Reply</button>
-                      {user && (com.userId === user.id || user.role === "admin") && (
+                      {user && (idOf(com.userId) === user.id || user.role === "admin") && (
                         <>
                           <button onClick={() => setEditingCommentId(com._id)} className="hover:text-primary"><FiEdit /></button>
                           <button onClick={() => handleDeleteComment(com._id)} className="hover:text-accent"><FiTrash2 /></button>
@@ -473,13 +480,13 @@ const RecipeDetail = () => {
                               alt="Profile"
                               className="w-5 h-5 rounded-full object-cover border border-leaf cursor-pointer"
                               onClick={() => navigate(
-                                user?.id === reply.userId ? "/profile" : `/profile/${reply.userId}`
+                                user && idOf(reply.userId) === user.id ? "/profile" : `/profile/${idOf(reply.userId)}`
                               )}
                             />
                             <span
                               className="font-semibold hover:underline cursor-pointer text-leaf"
                               onClick={() => navigate(
-                                user?.id === reply.userId ? "/profile" : `/profile/${reply.userId}`
+                                user && idOf(reply.userId) === user.id ? "/profile" : `/profile/${idOf(reply.userId)}`
                               )}
                             >
                               {reply.username}
@@ -540,19 +547,21 @@ const RecipeDetail = () => {
                                 <div className="flex items-center gap-4 text-xs text-leaf">
                                   <button
                                     onClick={() => handleLikeReply(com._id, reply._id)}
-                                    className={`flex items-center gap-1 ${reply.likes && user && reply.likes.includes(user.id) ? 'text-accent' : 'hover:text-accent'}`}
-                                    aria-label={reply.likes && user && reply.likes.includes(user.id) ? 'Unlike' : 'Like'}
+                                    className={`flex items-center gap-1 ${(reply.likes && user && reply.likes.map(String).includes(user.id)) ? 'text-accent' : 'hover:text-accent'}`}
+                                    aria-label={(reply.likes && user && reply.likes.map(String).includes(user.id)) ? 'Unlike' : 'Like'}
                                   >
-                                    {reply.likes && user && reply.likes.includes(user.id) ? <FaHeart /> : <FaRegHeart />}
+                                    {(reply.likes && user && reply.likes.map(String).includes(user.id)) ? <FaHeart /> : <FaRegHeart />}
                                     {reply.likes?.length || 0}
                                   </button>
                                   <button onClick={() => setReplyText((prev) => ({ ...prev, [com._id]: `@${reply.username} ` }))} className="hover:text-primary">
                                     Reply
                                   </button>
-                                  <>
-                                    <button onClick={() => setEditingReply((prev) => ({ ...prev, [reply._id]: true }))} className="text-primary ml-2">Edit</button>
-                                    <button onClick={() => handleDeleteReply(com._id, reply._id)} className="text-accent ml-2">Delete</button>
-                                  </>
+                                  {user && (idOf(reply.userId) === user.id || user.role === "admin") && (
+                                    <>
+                                      <button onClick={() => setEditingReply((prev) => ({ ...prev, [reply._id]: true }))} className="text-primary ml-2">Edit</button>
+                                      <button onClick={() => handleDeleteReply(com._id, reply._id)} className="text-accent ml-2">Delete</button>
+                                    </>
+                                  )}
                                 </div>
                               </>
                             )}

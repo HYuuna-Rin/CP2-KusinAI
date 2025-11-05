@@ -54,19 +54,34 @@ function Contact() {
           <div className="bg-surface/90 p-6 rounded-lg max-w-xl w-full shadow-lg text-left space-y-4">
             <h2 className="text-2xl font-bold text-primary text-center mb-2">Contact Us</h2>
             {/* Social Links */}
-            <div className="flex justify-center gap-4 mb-4">
-              <a href="https://facebook.com/kusinai" target="_blank" rel="noopener noreferrer" className="hover:text-accent">
-                <span role="img" aria-label="Facebook">📘</span> Facebook
-              </a>
-              <a href="https://linkedin.com/company/kusinai" target="_blank" rel="noopener noreferrer" className="hover:text-accent">
-                <span role="img" aria-label="LinkedIn">💼</span> LinkedIn
-              </a>
-            </div>
-            <p><span className="font-semibold text-leaf">Email:</span> <a href="mailto:support@kusinai.ph" className="underline text-accent">support@kusinai.ph</a></p>
-            <p><span className="font-semibold text-leaf">Phone:</span> <a href="tel:+639123456789" className="underline text-accent">+63 912 345 6789</a></p>
-            <p><span className="font-semibold text-leaf">Address:</span> 3rd Floor, IT Building, Pamantasan ng Lungsod ng Maynila</p>
+            <p><span className="font-semibold text-leaf">Email:</span> <a href="mailto:kusinai27@gmail.com" className="underline text-primary">kusinai27@gmail.com</a></p>
+            <p><span className="font-semibold text-leaf">Phone:</span> <a href="tel:+639123456789" className="underline text-primary">+63 912 345 6789</a></p>
+            <p><span className="font-semibold text-leaf">Address:</span> Tarlac City, Tarlac</p>
             <p><span className="font-semibold text-leaf">Office Hours:</span> Mon-Fri, 9am-5pm</p>
-            <p>We're open to <span className="text-accent">feedback</span>, <span className="text-accent">partnerships</span>, or <span className="text-accent">feature requests</span>. Feel free to contact us for any concerns.</p>
+            <p>We're open to <span className="text-leaf">feedback</span>, <span className="text-leaf">partnerships</span>, or <span className="text-leaf">feature requests</span>. Feel free to contact us for any concerns.</p>
+            
+            {/* Team Profiles (mirror About page) */}
+            <h2 className="text-xl font-bold mt-6 mb-4 text-leaf">Meet the Team</h2>
+            <div className="flex flex-wrap gap-6 justify-center mb-2">
+              <div className="bg-background/80 rounded-lg p-4 w-48 flex flex-col items-center">
+                <img src="/team1.jpg" alt="Team Member" className="w-20 h-20 rounded-full mb-2 object-cover border-2 border-accent" />
+                <div className="font-semibold text-text">Juan Dela Cruz</div>
+                <div className="text-xs text-leaf">Project Lead</div>
+                <div className="text-xs mt-2 text-tamarind">"Turning ideas into code!"</div>
+              </div>
+              <div className="bg-background/80 rounded-lg p-4 w-48 flex flex-col items-center">
+                <img src="/team2.jpg" alt="Team Member" className="w-20 h-20 rounded-full mb-2 object-cover border-2 border-accent" />
+                <div className="font-semibold text-text">Maria Santos</div>
+                <div className="text-xs text-leaf">UI/UX Designer</div>
+                <div className="text-xs mt-2 text-tamarind">"Designing for every kitchen!"</div>
+              </div>
+              <div className="bg-background/80 rounded-lg p-4 w-48 flex flex-col items-center">
+                <img src="/team3.jpg" alt="Team Member" className="w-20 h-20 rounded-full mb-2 object-cover border-2 border-accent" />
+                <div className="font-semibold text-text">Jose Rizal</div>
+                <div className="text-xs text-leaf">Backend Developer</div>
+                <div className="text-xs mt-2 text-tamarind">"Making data delicious!"</div>
+              </div>
+            </div>
           </div>
         </main>
       </MainLayout>

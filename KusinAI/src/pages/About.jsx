@@ -30,9 +30,9 @@ function About() {
             <div className="flex flex-wrap gap-6 justify-center mb-8">
               {/* Example team members, replace with real info/photos */}
               <div className="bg-background/80 rounded-lg p-4 w-48 flex flex-col items-center">
-                <img src="/team1.jpg" alt="Team Member" className="w-20 h-20 rounded-full mb-2 object-cover border-2 border-accent" />
-                <div className="font-semibold text-text">Juan Dela Cruz</div>
-                <div className="text-xs text-leaf">Project Lead</div>
+                <img src="assets/Jhowne_Profile.jpg" alt="Team Member" className="w-20 h-20 rounded-full mb-2 object-cover border-2 border-accent" />
+                <div className="font-semibold text-text">Joeshua Jhowne P. Del Rosario</div>
+                <div className="text-xs text-leaf">Developer</div>
                 <div className="text-xs mt-2 text-tamarind">"Turning ideas into code!"</div>
               </div>
               <div className="bg-background/80 rounded-lg p-4 w-48 flex flex-col items-center">

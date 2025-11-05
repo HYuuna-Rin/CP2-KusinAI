@@ -6,6 +6,7 @@ import { BASE_URL } from "../Config.js";
 
 function Register() {
   const [formData, setFormData] = useState({ name: "", email: "", password: "" });
+  const [passwordError, setPasswordError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -20,6 +21,30 @@ function Register() {
     if (formData.password !== confirmPassword) {
       alert("Passwords do not match");
       return;
+    }
+    // Client-side password validation with detailed feedback
+    const pwd = formData.password || "";
+    const checks = {
+      length: pwd.length >= 8,
+      lower: /[a-z]/.test(pwd),
+      upper: /[A-Z]/.test(pwd),
+      number: /\d/.test(pwd),
+      special: /[^A-Za-z0-9]/.test(pwd),
+    };
+
+    const failed = Object.entries(checks).filter(([, ok]) => !ok).map(([k]) => k);
+    if (failed.length > 0) {
+      const msgs = [];
+      if (failed.includes("length")) msgs.push("at least 8 characters");
+      if (failed.includes("upper")) msgs.push("an uppercase letter");
+      if (failed.includes("lower")) msgs.push("a lowercase letter");
+      if (failed.includes("number")) msgs.push("a number");
+      if (failed.includes("special")) msgs.push("a special character");
+      setPasswordError("Password must include: " + msgs.join(", ") + ".");
+      console.debug("Password validation failed:", checks, "pwdLength:", pwd.length);
+      return;
+    } else {
+      setPasswordError("");
     }
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
@@ -84,6 +109,7 @@ function Register() {
               className="w-full p-3 border border-leaf/40 rounded pr-10 bg-background text-text focus:border-leaf"
               required
             />
+            {passwordError && <div className="text-sm text-red-500 mt-1">{passwordError}</div>}
             <button
               type="button"
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-leaf"
