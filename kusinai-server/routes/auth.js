@@ -172,12 +172,23 @@ router.post("/login", async (req, res) => {
     if (!isMatch)
       return res.status(400).json({ message: "Invalid credentials" });
 
-    // 🔒 If not verified, resend verification email (allow admin to bypass verification)
-    if (!user.isVerified && user.role !== "admin") {
-      await sendVerificationEmail(user, process.env.FRONTEND_URL);
-      return res.status(403).json({
-        message: "Email not verified. A new verification link has been sent to your inbox.",
-      });
+    // 🔒 If not verified, resend verification email (skip for Admin to prevent SMTP timeout)
+    if (!user.isVerified) {
+      if (user.role === "admin") {
+        console.warn("⚠️ Admin login skipped email verification to avoid SMTP timeout on Render.");
+      } else {
+        try {
+          await sendVerificationEmail(user, process.env.FRONTEND_URL);
+          return res.status(403).json({
+            message: "Email not verified. A new verification link has been sent to your inbox.",
+          });
+        } catch (emailErr) {
+          console.error("📧 Email sending skipped or failed:", emailErr);
+          return res.status(403).json({
+            message: "Email not verified (email sending temporarily disabled).",
+          });
+        }
+      }
     }
 
     // ✅ If verified, issue login token
