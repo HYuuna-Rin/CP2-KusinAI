@@ -17,9 +17,6 @@ import testEmailRoutes from "./routes/testEmail.js";
 
 const app = express();
 
-// 🧹 TEMP SAFETY — ensures FRONTEND_URL isn’t misused as a route
-delete process.env.FRONTEND_URL;
-
 // ✅ Middleware setup
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
