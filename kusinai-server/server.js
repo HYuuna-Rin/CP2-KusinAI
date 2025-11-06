@@ -3,6 +3,7 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import path from "path";
+import fs from "fs";
 import { fileURLToPath } from "url";
 
 import recipeRoutes from "./routes/recipeRoutes.js";
@@ -16,11 +17,15 @@ import testEmailRoutes from "./routes/testEmail.js";
 
 const app = express();
 
-// ✅ Allow larger image uploads (50 MB max)
+// 🧹 TEMP SAFETY — ensures FRONTEND_URL isn’t misused as a route
+delete process.env.FRONTEND_URL;
+
+// ✅ Middleware setup
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
+// ✅ API Routes
 app.use("/api/user", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/recipes", recipeRoutes);
@@ -36,17 +41,24 @@ mongoose
   .then(() => console.log("✅ MongoDB Connected"))
   .catch((err) => console.error("❌ MongoDB connection error:", err));
 
-// ✅ Start server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-
-// Serve frontend in production
+// ✅ Serve frontend (if it exists)
 if (process.env.NODE_ENV === "production") {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
   const clientBuildPath = path.join(__dirname, "..", "KusinAI", "dist");
-  app.use(express.static(clientBuildPath));
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(clientBuildPath, "index.html"));
-  });
+
+  if (fs.existsSync(clientBuildPath)) {
+    console.log("🌐 Serving frontend from:", clientBuildPath);
+    app.use(express.static(clientBuildPath));
+
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(clientBuildPath, "index.html"));
+    });
+  } else {
+    console.warn("⚠️ Skipping frontend static serve — dist folder not found");
+  }
 }
+
+// ✅ Start server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
