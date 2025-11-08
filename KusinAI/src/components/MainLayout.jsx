@@ -83,7 +83,7 @@ const MainLayout = ({ children }) => {
           } w-64`}
         >
           <div className="flex items-center justify-between p-4 border-b border-leaf">
-            <span className="text-xl font-bold text-accent">KusinAI 🤖</span>
+            <span className="text-xl font-bold text-accent">KusinAI</span>
             <div className="flex gap-2 items-center">
               {isLoggedIn() && <LogoutButton />}
               <FiX
@@ -129,9 +129,6 @@ const MainLayout = ({ children }) => {
                 className="h-full max-h-[36px] w-auto object-contain"
                 style={{ marginRight: "0.5rem" }}
               />
-              <span className="text-text" style={{ textShadow: "0 1px 2px #fff8" }}>
-                Kusin<span className="text-accent drop-shadow-md">AI</span>
-              </span>
             </Link>
 
             {/* Search Bar */}

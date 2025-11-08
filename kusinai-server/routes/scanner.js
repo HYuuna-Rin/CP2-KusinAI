@@ -6,20 +6,13 @@ const router = express.Router();
 
 // Words too generic to count as ingredients
 const IGNORE_WORDS = new Set([
-  "dish",
-  "food",
-  "cuisine",
-  "meal",
-  "ingredient",
-  "recipe",
-  "produce",
-  "fruit",
-  "vegetable",
-  "pack",
-  "package",
+  "dish","food","cuisine","meal","ingredient","recipe","produce",
+  "fruit","vegetable","pack","package","bowl","plate","utensil",
+  "spoon","fork","knife","table","container","pan","tray","tableware",
+  "cutlery","serveware","dining","tablecloth","pot","cooking utensil"
 ]);
 
-// Simple singularize helper for common plurals
+// Simple singularize helper
 const singularize = (word) => {
   if (!word) return word;
   if (word.endsWith("ies")) return word.slice(0, -3) + "y";
@@ -28,7 +21,7 @@ const singularize = (word) => {
   return word;
 };
 
-// Normalize tokens: lowercase, trim, remove punctuation
+// Normalize tokens
 const normalize = (str) =>
   (str || "")
     .toLowerCase()
@@ -38,9 +31,8 @@ const normalize = (str) =>
 router.post("/scan", async (req, res) => {
   try {
     const { imageBase64 } = req.body;
-    if (!imageBase64) {
+    if (!imageBase64)
       return res.status(400).json({ error: "Image is required" });
-    }
 
     const response = await fetch(
       `https://vision.googleapis.com/v1/images:annotate?key=${process.env.GOOGLE_VISION_API_KEY}`,
@@ -52,11 +44,9 @@ router.post("/scan", async (req, res) => {
             {
               image: { content: imageBase64 },
               features: [
-                // Increase results to capture more possible labels
                 { type: "LABEL_DETECTION", maxResults: 30 },
                 { type: "OBJECT_LOCALIZATION", maxResults: 30 },
                 { type: "TEXT_DETECTION", maxResults: 10 },
-                // Web detection can provide webEntities and best guess labels (helps for uncommon items)
                 { type: "WEB_DETECTION", maxResults: 15 },
               ],
             },
@@ -66,57 +56,50 @@ router.post("/scan", async (req, res) => {
     );
 
     const data = await response.json();
-    console.log("📷 Vision API raw response:", JSON.stringify(data, null, 2));
-
     const resp = data.responses?.[0] || {};
 
-    // Labels (general scene/context)
+    // Labels (scene/context)
     const labels = (resp.labelAnnotations || []).map((l) => ({
       name: singularize(normalize(l.description)),
       score: l.score || 0,
       source: "label",
     }));
 
-    // Objects (localized) with bounding polygon
+    // Objects (localized ingredients)
     const objects = (resp.localizedObjectAnnotations || []).map((o) => ({
       name: singularize(normalize(o.name)),
-      score: o.score || 0,
+      score: (o.score || 0) * 1.3, // boost importance
       boundingPoly: o.boundingPoly || null,
       source: "object",
     }));
 
-    // Text (OCR)
+    // OCR text tokens
     const texts = [];
     if (resp.textAnnotations && resp.textAnnotations.length > 0) {
       const whole = resp.textAnnotations[0].description || "";
       whole.split(/\s+/).forEach((t) => {
         const n = normalize(t);
-        if (n) texts.push({ name: singularize(n), score: 0.3, source: "text" });
+        if (n)
+          texts.push({ name: singularize(n), score: 0.3, source: "text" });
       });
     }
 
-    // Merge candidates and dedupe by name.
-    // Prefer candidates that include a boundingPoly (objects/localized detections)
-    // so the frontend can crop individual items instead of always falling back
-    // to the full scanned image for labels/text tokens.
-      const webLabels = (resp.webDetection?.bestGuessLabels || []).map(w => ({
-        name: singularize(normalize(w.label)),
-        score: 0.6,
-        source: 'webBestGuess'
-      }));
+    // Web hints
+    const webLabels = (resp.webDetection?.bestGuessLabels || []).map((w) => ({
+      name: singularize(normalize(w.label)),
+      score: 0.6,
+      source: "webBestGuess",
+    }));
 
-      const webEntities = (resp.webDetection?.webEntities || []).map(e => ({
-        name: singularize(normalize(e.description || e.score || '')),
-        score: e.score || 0.5,
-        source: 'webEntity'
-      }));
+    const webEntities = (resp.webDetection?.webEntities || []).map((e) => ({
+      name: singularize(normalize(e.description || "")),
+      score: e.score || 0.5,
+      source: "webEntity",
+    }));
 
-    const all = [...objects, ...labels, ...texts];
-    // include web-derived hints at the end (they'll be considered if no better boxed/label exists)
-    all.push(...webLabels, ...webEntities);
+    const all = [...objects, ...labels, ...texts, ...webLabels, ...webEntities];
 
-    // Aliases / synonyms for common or ambiguous ingredient names to improve recall.
-    // If a candidate appears as one name, we also add its known synonyms with a slightly lower score.
+    // Synonyms / aliases for ingredient recall
     const ALIASES = {
       pomelo: ["pummelo", "shaddock", "pomello"],
       eggplant: ["aubergine"],
@@ -138,17 +121,21 @@ router.post("/scan", async (req, res) => {
       if (!name) continue;
       const canon = normalizedToCanonical[name];
       if (canon) {
-        // add other synonyms for this canonical name
         const syns = [canon].concat(ALIASES[canon] || []);
         for (const s of syns) {
           if (s === name) continue;
-          extra.push({ name: s, score: (c.score || 0) * 0.7, source: 'alias' });
+          extra.push({
+            name: s,
+            score: (c.score || 0) * 0.7,
+            source: "alias",
+            boundingPoly: c.boundingPoly || null,
+          });
         }
       }
     }
-
     if (extra.length) all.push(...extra);
 
+    // Merge duplicates (keep best-scoring or boxed)
     const m = new Map();
     for (const c of all) {
       if (!c.name) continue;
@@ -158,39 +145,66 @@ router.post("/scan", async (req, res) => {
         continue;
       }
 
-      const hasBox = (cand) => !!(cand && cand.boundingPoly && (cand.boundingPoly.normalizedVertices || cand.boundingPoly.vertices));
+      const hasBox = (cand) =>
+        !!(
+          cand &&
+          cand.boundingPoly &&
+          (cand.boundingPoly.normalizedVertices || cand.boundingPoly.vertices)
+        );
       const cHasBox = hasBox(c);
       const existingHasBox = hasBox(existing);
 
-      // If the new candidate has a bounding box while the existing one doesn't,
-      // prefer the boxed candidate even if its score is lower. This helps the
-      // frontend produce per-item cropped thumbnails.
       if (cHasBox && !existingHasBox) {
         m.set(c.name, c);
         continue;
       }
-
-      // Otherwise, keep the one with the higher score.
-      if ((c.score || 0) > (existing.score || 0)) {
-        m.set(c.name, c);
-      }
+      if ((c.score || 0) > (existing.score || 0)) m.set(c.name, c);
     }
 
-    let candidates = Array.from(m.values()).filter((c) => {
+    // Weighted confidence
+    const weighted = Array.from(m.values()).map((c) => {
+      let s = c.score || 0;
+      if (c.source === "object") s += 0.2;
+      if (c.source === "label") s -= 0.05;
+      if (c.source === "text") s -= 0.15;
+      if (c.source === "webEntity") s -= 0.05;
+      return {
+        ...c,
+        score: Math.min(1, Math.max(0, s)),
+      };
+    });
+
+    // Dynamic confidence threshold
+    const scores = weighted.map((c) => c.score);
+    const avgScore = scores.reduce((a, b) => a + b, 0) / (scores.length || 1);
+    let minThreshold = 0.6;
+    if (avgScore < 0.6) minThreshold = 0.4;
+    if (avgScore > 0.85) minThreshold = 0.7;
+
+    // Filter out generic & low-confidence terms
+    let candidates = weighted.filter((c) => {
       if (!c.name) return false;
       if (IGNORE_WORDS.has(c.name)) return false;
       if (/^\d+$/.test(c.name)) return false;
       if (c.name.length < 2) return false;
+      if ((c.score || 0) < minThreshold) return false;
+      if (["meat", "fruit", "vegetable", "produce", "food"].includes(c.name))
+        return false;
       return true;
     });
 
-    // sort by score desc
     candidates.sort((a, b) => (b.score || 0) - (a.score || 0));
 
-    return res.json({ candidates, debug: { labels: labels.map(l => l.name), objects: objects.map(o => o.name), texts: texts.map(t => t.name) } });
+    // ✅ Return full info (with boundingPoly etc.) so "Learn" works
+    return res.json({
+      candidates,
+      debug: { avgScore, threshold: minThreshold },
+    });
   } catch (err) {
     console.error("❌ Vision API Error:", err);
-    res.status(500).json({ error: "Failed to scan ingredients", details: String(err) });
+    res
+      .status(500)
+      .json({ error: "Failed to scan ingredients", details: String(err) });
   }
 });
 
