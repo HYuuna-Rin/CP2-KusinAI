@@ -25,10 +25,21 @@ const recipeSchema = new mongoose.Schema({
   ingredients: [String],
   steps: [String],
   nutrition: {
-    calories: String,
-    protein: String,
-    fat: String,
-    carbs: String,
+    calories: { type: Number, default: 0 },
+    protein: { type: Number, default: 0 },
+    fat: { type: Number, default: 0 },
+    carbs: { type: Number, default: 0 },
+    // per-serving breakdown and serving count
+    servings: { type: Number, default: 1 },
+    servingSize: { type: String, default: "" },
+    // whether the servings value was estimated by the nutrition calculator
+    estimatedServings: { type: Boolean, default: false },
+    perServing: {
+      calories: { type: Number, default: 0 },
+      protein: { type: Number, default: 0 },
+      fat: { type: Number, default: 0 },
+      carbs: { type: Number, default: 0 }
+    }
   },
   substitutions: [String],
   method: String,

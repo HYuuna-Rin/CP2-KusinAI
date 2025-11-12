@@ -6,12 +6,25 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "cap:copy": "npx cap copy",
+    "android:open": "npx cap open android",
+    "build:android": "npm run build && npx cap copy android"
   },
   "dependencies": {
+    "@capacitor-community/http": "^1.4.1",
+    "@capacitor/android": "^7.4.4",
+    "@capacitor/app": "^7.1.0",
+    "@capacitor/camera": "^7.0.2",
+    "@capacitor/cli": "^7.4.4",
+    "@capacitor/core": "^7.4.4",
+    "@capacitor/filesystem": "^7.1.4",
+    "@capacitor/preferences": "^7.0.2",
+    "@ionic/react": "^8.7.9",
     "@vitejs/plugin-react": "^4.6.0",
     "axios": "^1.10.0",
     "framer-motion": "^12.19.2",
+    "ionicons": "^8.0.13",
     "jwt-decode": "^4.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

@@ -191,7 +191,7 @@ const MainLayout = ({ children }) => {
           <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
             <div className="bg-white p-5 rounded-xl shadow-lg text-center w-full max-w-md">
               <h2 className="text-xl font-bold mb-2 text-primary">Scan Ingredients</h2>
-              <IngredientScanner onScan={handleScanResult} />
+              <IngredientScanner onScan={handleScanResult} onClose={() => setScannerOpen(false)} />
               <button
                 onClick={() => setScannerOpen(false)}
                 className="mt-4 bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded transition-all"

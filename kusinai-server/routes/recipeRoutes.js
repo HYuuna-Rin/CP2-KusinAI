@@ -58,13 +58,24 @@ router.get("/search", async (req, res) => {
 // GET recipe by ID
 router.get("/id/:id", async (req, res) => {
   try {
-    const recipe = await Recipe.findById(req.params.id);
+    const recipe = await Recipe.findById(req.params.id)
+      .populate({
+        path: "comments.userId",
+        select: "name profileImage"
+      })
+      .populate({
+        path: "comments.replies.userId",
+        select: "name profileImage"
+      });
+
     if (!recipe) return res.status(404).json({ error: "Recipe not found" });
     res.json(recipe);
   } catch (err) {
+    console.error("❌ Error fetching recipe:", err);
     res.status(500).json({ error: err.message });
   }
 });
+
 
 // GET recipe by Title
 router.get("/title/:title", async (req, res) => {

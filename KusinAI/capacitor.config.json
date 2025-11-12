@@ -1,0 +1,9 @@
+{
+  "appId": "com.kusinai.app",
+  "appName": "KusinAI",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "http",
+    "cleartext": true
+  }
+}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import PrivateRoute from './components/PrivateRoute';
 import Landing from './pages/Landing';
 import About from './pages/About';
@@ -17,10 +17,10 @@ import AddRecipe from "./pages/AddRecipe";
 import EditRecipe from "./pages/EditRecipe";
 import ProtectedRoute from "./components/ProtectedRoute";
 import VerifyEmail from './pages/VerifyEmail';
+import OpenAppRedirect from './pages/OpenAppRedirect';
 
 function App() {
   return (
-    <Router>
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Landing />} />
@@ -28,6 +28,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/openapp" element={<OpenAppRedirect />} />
 
 
         {/* User Protected Routes */}
@@ -45,7 +46,6 @@ function App() {
         <Route path="/admin/recipes/new" element={<ProtectedRoute role="admin"><AddRecipe /></ProtectedRoute>} />
         <Route path="/admin/recipes/edit/:id" element={<ProtectedRoute role="admin"><EditRecipe /></ProtectedRoute>} />
       </Routes>
-    </Router>
   );
 }
 

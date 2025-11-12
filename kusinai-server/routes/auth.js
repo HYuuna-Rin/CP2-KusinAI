@@ -11,16 +11,28 @@ import Recipe from "../models/Recipe.js";
 
 const router = express.Router();
 
-// ✅ Auth Middleware
+/* =========================================================
+   ✅ AUTH MIDDLEWARE
+   ========================================================= */
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
 
-  if (!token) return res.sendStatus(401);
+  if (!token) {
+    return res
+      .status(401)
+      .json({ error: "Access denied. No token provided." });
+  }
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) return res.sendStatus(403);
-    req.user = user; // contains { id, name, email }
+    if (err) {
+      console.error("❌ JWT verification failed:", err.message);
+      return res
+        .status(403)
+        .json({ error: "Invalid or expired token. Please log in again." });
+    }
+
+    req.user = user; // decoded payload: { id, name, email, role }
     next();
   });
 };
@@ -32,108 +44,162 @@ const isAdmin = (req, res, next) => {
   next();
 };
 
-// Utility: send verification email
+/* =========================================================
+   📧 EMAIL VERIFICATION UTILITY
+   ========================================================= */
 async function sendVerificationEmail(user, frontendURL) {
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     console.error("❌ Missing EMAIL_USER or EMAIL_PASS in .env");
     throw new Error("Email configuration missing");
   }
 
-  const token = jwt.sign(
-    { id: user._id, email: user.email },
-    process.env.JWT_SECRET,
-    { expiresIn: "24h" }
-  );
-
-  const verifyLink = `${frontendURL}/verify-email?token=${token}`;
+  // For code-based verification: we won't use the token link. This helper remains
+  // for compatibility but primary verification will use a numeric code sent by email.
+  const cleanFrontend = frontendURL ? frontendURL.replace(/\/$/, "") : "";
+  const verifyLinkWeb = cleanFrontend ? `${cleanFrontend}/openapp?token=REDACTED` : ``;
 
   const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST || "smtp.gmail.com",
     port: process.env.EMAIL_PORT || 465,
-    secure: true, // use SSL
+    secure: true,
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
   });
 
-  // Optional: verify connection
-  transporter.verify((err, success) => {
+  transporter.verify((err) => {
     if (err) console.error("❌ Email transport error:", err);
     else console.log("✅ Email transporter ready");
   });
 
+  // NOTE: sendVerificationEmail is retained for backward compatibility but the
+  // primary flow now uses a numeric 6-digit code. For safety we will not send
+  // token links from here anymore.
   await transporter.sendMail({
     from: `"KusinAI 🍳" <${process.env.EMAIL_USER}>`,
     to: user.email,
     subject: "Verify your KusinAI account",
     html: `
       <h2>Welcome to <span style="color:#16a34a">KusinAI</span>, ${user.name}!</h2>
-      <p>Please verify your email within 24 hours:</p>
-      <a href="${verifyLink}"
-         style="display:inline-block;background:#16a34a;color:white;
-                padding:10px 16px;border-radius:8px;text-decoration:none;
-                font-weight:bold;margin-top:8px;">
-        ✅ Verify Email
-      </a>
-      <p style="margin-top:16px;color:#666;">If you didn’t create this account, ignore this email.</p>
+      <p>If you received this email by mistake, ignore it.</p>
+      <p style="margin-top:16px;color:#666;">Thanks,<br/>KusinAI Team</p>
     `,
   });
 }
 
+// generate a 6-digit numeric code as a string
+function generateCode() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
 
-// Register route
+// send numeric verification code email and save code+expiry on user
+async function sendVerificationCodeEmail(user) {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.error("❌ Missing EMAIL_USER or EMAIL_PASS in .env");
+    throw new Error("Email configuration missing");
+  }
+
+  const code = generateCode();
+  // Expires in 30 minutes
+  const expires = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+
+  // persist to user
+  user.verificationCode = code;
+  user.verificationExpires = expires;
+  await user.save();
+
+  const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST || "smtp.gmail.com",
+    port: process.env.EMAIL_PORT || 465,
+    secure: true,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+
+    const html = `
+    <h2>Verify your KusinAI account</h2>
+    <p>Hi ${user.name},</p>
+    <p>Your verification code is:</p>
+    <p style="font-size:24px;font-weight:bold;color:#16a34a">${code}</p>
+    <p>This code expires in 30 minutes. Enter it in the KusinAI app to verify your email.</p>
+    <p>If you did not request this, ignore this email.</p>
+  `;
+
+  await transporter.sendMail({
+    from: `"KusinAI 🍳" <${process.env.EMAIL_USER}>`,
+    to: user.email,
+    subject: "Your KusinAI verification code",
+    html,
+  });
+}
+
+
+/* =========================================================
+   🧾 REGISTER
+   ========================================================= */
 router.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
 
   try {
-    // 1️⃣ Basic format validation
+    // Basic email validation
     if (!validator.isEmail(email))
       return res.status(400).json({ message: "Invalid email format" });
 
-    // Password strength validation: at least 8 chars, upper, lower, number, special
-    const passRule = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+    // Strong password validation
+    const passRule =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
     if (!passRule.test(password)) {
-      return res.status(400).json({ message: "Password must be at least 8 characters and include uppercase, lowercase, a number and a special character." });
+      return res.status(400).json({
+        message:
+          "Password must be at least 8 characters and include uppercase, lowercase, a number and a special character.",
+      });
     }
 
-    // 2️⃣ Check MX records
+    // MX record validation
     const domain = email.split("@")[1];
     try {
       const mx = await dns.promises.resolveMx(domain);
       if (!mx || mx.length === 0)
         return res
           .status(400)
-          .json({ message: "Email domain is not valid or cannot receive messages" });
+          .json({ message: "Email domain is not valid or cannot receive mail." });
     } catch {
       return res
         .status(400)
-        .json({ message: "Email domain is not valid or cannot receive messages" });
+        .json({ message: "Email domain is not valid or cannot receive mail." });
     }
 
-    // 3️⃣b Optional: Verify that email address actually exists using MailboxLayer API
-try {
-  const verifyRes = await fetch(
-    `https://apilayer.net/api/check?access_key=${process.env.MAILBOXLAYER_KEY}&email=${email}`
-  );
-  const verifyData = await verifyRes.json();
+    // MailboxLayer API verification (optional)
+    try {
+      const verifyRes = await fetch(
+        `https://apilayer.net/api/check?access_key=${process.env.MAILBOXLAYER_KEY}&email=${email}`
+      );
+      const verifyData = await verifyRes.json();
+      if (
+        !verifyData.format_valid ||
+        !verifyData.mx_found ||
+        !verifyData.smtp_check
+      ) {
+        return res
+          .status(400)
+          .json({ message: "Please use a valid and existing email address." });
+      }
+    } catch (err) {
+      console.error("📧 MailboxLayer API error:", err);
+      return res
+        .status(500)
+        .json({ message: "Failed to verify email address." });
+    }
 
-  if (!verifyData.format_valid || !verifyData.mx_found || !verifyData.smtp_check) {
-    return res.status(400).json({
-      message: "Please use a valid and existing email address.",
-    });
-  }
-} catch (err) {
-  console.error("📧 MailboxLayer API error:", err);
-  return res.status(500).json({ message: "Failed to verify email address." });
-}
-
-    // 3️⃣ Check duplicates
+    // Check duplicate user
     const existingUser = await User.findOne({ email });
     if (existingUser)
-      return res.status(400).json({ message: "Email already registered" });
+      return res.status(400).json({ message: "Email already registered." });
 
-    // 4️⃣ Create user
+    // Create user
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = new User({
       name,
@@ -143,8 +209,8 @@ try {
     });
     await user.save();
 
-    // 5️⃣ Send verification email
-    await sendVerificationEmail(user, process.env.FRONTEND_URL);
+  // Send numeric verification code email
+  await sendVerificationCodeEmail(user);
 
     res.status(201).json({
       message:
@@ -156,42 +222,57 @@ try {
   }
 });
 
-// ✅ Login
+/* =========================================================
+   🔑 LOGIN
+   ========================================================= */
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   try {
     const user = await User.findOne({ email });
     if (!user)
-      return res.status(400).json({ message: "User not found" });
+      return res.status(400).json({ message: "User not found." });
 
     if (user.isBanned)
-      return res.status(403).json({ message: "Your account has been banned. Please contact support." });
+      return res
+        .status(403)
+        .json({ message: "Your account has been banned. Please contact support." });
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(400).json({ message: "Invalid credentials." });
 
-    // 🔒 If not verified, resend verification email (skip for Admin to prevent SMTP timeout)
+    // If not verified, resend email (skip for admin)
     if (!user.isVerified) {
-      if (user.role === "admin") {
-        console.warn("⚠️ Admin login skipped email verification to avoid SMTP timeout on Render.");
-      } else {
+      if (user.role !== "admin") {
         try {
-          await sendVerificationEmail(user, process.env.FRONTEND_URL);
+          console.log(`auth.login: user ${email} not verified — resending code`);
+          await sendVerificationCodeEmail(user);
+          console.log(`auth.login: resend-code email triggered for ${email}`);
+          // include a redirect hint and the email so clients (especially WebView) can navigate reliably
+          const frontendBase = process.env.FRONTEND_URL || req.get('origin') || '';
+          const redirectUrl = frontendBase ? `${frontendBase.replace(/\/$/, '')}/verify-email` : '/verify-email';
           return res.status(403).json({
-            message: "Email not verified. A new verification link has been sent to your inbox.",
+            message: "Email not verified. A new verification link has been sent.",
+            redirect: "/verify-email",
+            email: user.email,
+            redirectUrl,
           });
         } catch (emailErr) {
-          console.error("📧 Email sending skipped or failed:", emailErr);
+          console.error("📧 Email send failed:", emailErr);
+          const frontendBase = process.env.FRONTEND_URL || req.get('origin') || '';
+          const redirectUrl = frontendBase ? `${frontendBase.replace(/\/$/, '')}/verify-email` : '/verify-email';
           return res.status(403).json({
-            message: "Email not verified (email sending temporarily disabled).",
+            message: "Email not verified (email sending temporarily failed).",
+            redirect: "/verify-email",
+            email: user.email,
+            redirectUrl,
           });
         }
       }
     }
 
-    // ✅ If verified, issue login token
+    // Issue JWT token
     const token = jwt.sign(
       { id: user._id, name: user.name, email: user.email, role: user.role },
       process.env.JWT_SECRET,
@@ -208,50 +289,78 @@ router.post("/login", async (req, res) => {
   }
 });
 
-
-// Verify Email
-router.get("/verify-email", async (req, res) => {
-  const { token } = req.query;
+/* =========================================================
+   📩 VERIFY EMAIL
+   ========================================================= */
+// Verify by code: POST /api/auth/verify-code  { email, code }
+router.post("/verify-code", async (req, res) => {
+  const { email, code } = req.body;
+  if (!email || !code) return res.status(400).json({ message: "Email and code are required." });
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
-    if (!user)
-      return res.status(404).json({ message: "User not found or already deleted" });
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: "User not found." });
+    if (user.isVerified) return res.status(200).json({ message: "Email already verified." });
 
-    if (user.isVerified)
-      return res.status(200).json({ message: "Email already verified" });
+    if (!user.verificationCode || !user.verificationExpires)
+      return res.status(400).json({ message: "No verification code found. Request a new one." });
+
+    if (new Date() > new Date(user.verificationExpires))
+      return res.status(400).json({ message: "Verification code expired. Request a new one." });
+
+    if (user.verificationCode !== String(code))
+      return res.status(400).json({ message: "Invalid verification code." });
 
     user.isVerified = true;
+    user.verificationCode = "";
+    user.verificationExpires = null;
     await user.save();
 
-    res.status(200).json({ message: "✅ Email verified successfully! You can now log in." });
+    // After verifying, issue a JWT so the client can be logged in immediately
+    const token = jwt.sign(
+      { id: user._id, name: user.name, email: user.email, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
+    res.json({ message: "✅ Email verified successfully.", token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
   } catch (err) {
-    if (err.name === "TokenExpiredError") {
-      return res.status(400).json({ message: "Verification link expired. Please log in to resend a new link." });
-    }
-    console.error("❌ Verification error:", err);
-    res.status(400).json({ message: "Invalid verification token" });
+    console.error("❌ verify-code error:", err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
+// Resend code: POST /api/auth/resend-code { email }
+router.post("/resend-code", async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ message: "Email is required." });
 
-
-// ✅ Save Notes
-router.put("/notes", async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(" ")[1];
-    if (!token) return res.status(401).json({ message: "No token provided" });
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: "User not found." });
+    if (user.isVerified) return res.status(200).json({ message: "Email already verified." });
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    await sendVerificationCodeEmail(user);
+    res.json({ message: "Verification code resent." });
+  } catch (err) {
+    console.error("❌ resend-code error:", err);
+    res.status(500).json({ message: "Failed to resend verification code." });
+  }
+});
+
+/* =========================================================
+   🗒️ NOTES & FAVORITES
+   ========================================================= */
+router.put("/notes", authenticateToken, async (req, res) => {
+  try {
     const updatedUser = await User.findByIdAndUpdate(
-      decoded.id,
+      req.user.id,
       { notes: req.body.notes },
       { new: true }
     );
 
     if (!updatedUser)
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: "User not found." });
 
     res.json({ message: "Notes saved successfully", notes: updatedUser.notes });
   } catch (err) {
@@ -260,15 +369,10 @@ router.put("/notes", async (req, res) => {
   }
 });
 
-// ✅ Fetch Notes
-router.get("/notes", async (req, res) => {
+router.get("/notes", authenticateToken, async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(" ")[1];
-    if (!token) return res.status(401).json({ message: "No token provided" });
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found." });
 
     res.json({ notes: user.notes || "" });
   } catch (err) {
@@ -277,15 +381,10 @@ router.get("/notes", async (req, res) => {
   }
 });
 
-// ✅ PUT Favorites (Update entire list)
-router.put("/favorites", async (req, res) => {
+router.put("/favorites", authenticateToken, async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(" ")[1];
-    if (!token) return res.status(401).json({ message: "No token provided" });
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found." });
 
     const { favorites } = req.body;
     user.favorites = favorites;
@@ -298,11 +397,10 @@ router.put("/favorites", async (req, res) => {
   }
 });
 
-// ✅ GET Favorites (Populated)
 router.get("/favorites", authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).populate("favorites");
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) return res.status(404).json({ message: "User not found." });
 
     res.json({ favorites: user.favorites });
   } catch (err) {
@@ -311,14 +409,17 @@ router.get("/favorites", authenticateToken, async (req, res) => {
   }
 });
 
+/* =========================================================
+   💬 FETCH USER COMMENTS
+   ========================================================= */
 router.get("/comments", authenticateToken, async (req, res) => {
   try {
     const recipes = await Recipe.find({}, "title comments");
 
     const userComments = [];
 
-    recipes.forEach(recipe => {
-      recipe.comments.forEach(comment => {
+    recipes.forEach((recipe) => {
+      recipe.comments.forEach((comment) => {
         if (comment.userId?.toString() === req.user.id) {
           userComments.push({
             recipeId: recipe._id,
@@ -327,11 +428,11 @@ router.get("/comments", authenticateToken, async (req, res) => {
             comment: comment.comment,
             createdAt: comment.createdAt,
             profileImage: comment.profileImage || "/default-profile.png",
-            type: "comment"
+            type: "comment",
           });
         }
 
-        comment.replies.forEach(reply => {
+        comment.replies.forEach((reply) => {
           if (reply.userId?.toString() === req.user.id) {
             userComments.push({
               recipeId: recipe._id,
@@ -341,7 +442,7 @@ router.get("/comments", authenticateToken, async (req, res) => {
               comment: reply.comment,
               createdAt: reply.createdAt,
               profileImage: reply.profileImage || "/default-profile.png",
-              type: "reply"
+              type: "reply",
             });
           }
         });
@@ -353,6 +454,13 @@ router.get("/comments", authenticateToken, async (req, res) => {
     console.error("❌ Error fetching user comments:", err);
     res.status(500).json({ message: "Server error" });
   }
+});
+
+/* =========================================================
+   🧭 TOKEN VERIFY (for testing/debugging)
+   ========================================================= */
+router.get("/verify", authenticateToken, (req, res) => {
+  res.json({ message: "Token is valid", user: req.user });
 });
 
 export { authenticateToken, isAdmin };

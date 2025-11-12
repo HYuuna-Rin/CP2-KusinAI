@@ -14,6 +14,7 @@ import scannerRoutes from "./routes/scanner.js";
 import adminRoutes from "./routes/admin.js";
 import feedbackRoutes from "./routes/feedback.js";
 import testEmailRoutes from "./routes/testEmail.js";
+import nutritionRoutes from "./routes/nutritionRoutes.js";
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use("/api/user", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/recipes", recipeRoutes);
+app.use("/api/recipes", nutritionRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/scanner", scannerRoutes);
 app.use("/api/admin", adminRoutes);

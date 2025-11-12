@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { BASE_URL } from "../Config.js";
+import { useToast } from "../context/ToastContext";
 
 function Register() {
   const [formData, setFormData] = useState({ name: "", email: "", password: "" });
@@ -11,6 +11,7 @@ function Register() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -47,22 +48,21 @@ function Register() {
       setPasswordError("");
     }
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
-        method: "POST",
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/register`, formData, {
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
       });
-      const data = await res.json();
 
-      if (res.status === 201) {
-        alert("Registration successful! Please check your email to verify your account before logging in.");
-        navigate("/login");
-      }else {
-        alert(data.message || "Registration failed");
+      // any 2xx -> success
+      if (res.status >= 200 && res.status < 300) {
+        showToast({ message: res.data?.message || 'Registration successful. Check your email for the code.', type: 'success' });
+        navigate("/verify-email", { state: { email: formData.email } });
+      } else {
+        showToast({ message: res.data?.message || 'Registration failed', type: 'error' });
       }
     } catch (err) {
-      console.error(err);
-      alert("Registration failed");
+      console.error('Registration error', err);
+      const msg = err?.response?.data?.message || 'Registration failed';
+      showToast({ message: msg, type: 'error' });
     }
   };
 

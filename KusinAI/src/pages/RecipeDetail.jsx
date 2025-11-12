@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useLocation, Link, useNavigate } from "react-router-dom";
 import { FiArrowLeft, FiEdit, FiTrash2 } from "react-icons/fi";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
@@ -40,17 +40,73 @@ const RecipeDetail = () => {
   // admin recipe delete modal
   const [deleteRecipeModal, setDeleteRecipeModal] = useState(false);
 
-  useEffect(() => {
-    const fetchRecipe = async () => {
-      try {
-        const res = await axios.get(`${API_URL}/api/recipes/title/${title}`);
-        setRecipe(res.data);
-        fetchComments(res.data._id);
-      } catch (err) {
-        setError("Recipe not found.");
-      }
-    };
+  // prevent duplicate nutrition recalculation requests
+  const [nutritionRequested, setNutritionRequested] = useState(false);
+  // local editable servings state (mirrors recipe.nutrition.servings)
+  const [localServings, setLocalServings] = useState(null);
+  // pull-to-refresh state
+  const pullStart = useRef(null);
+  const [pulling, setPulling] = useState(false);
+  const [pullDistance, setPullDistance] = useState(0);
 
+  // Ask the server to (re)calculate nutrition for this recipe and update local state.
+  // This calls the backend POST /api/recipes/:id/nutrition which persists the values
+  // and should return either the updated recipe or at least a nutrition object.
+  const fetchNutrition = async (recipeId, options = {}) => {
+    if (!recipeId) return;
+    if (nutritionRequested) return; // already requested
+    try {
+      setNutritionRequested(true);
+      const body = {};
+      if (options.servings) body.servings = Number(options.servings);
+      const res = await axios.post(`${API_URL}/api/recipes/${recipeId}/nutrition`, body);
+      // Server might return the full updated recipe or only the nutrition blob.
+      const data = res.data || {};
+      if (data._id && data._id === recipeId) {
+        setRecipe(data);
+        setLocalServings(data.nutrition?.servings ?? data.servings ?? null);
+      } else if (data.nutrition) {
+        setRecipe((prev) => ({ ...prev, nutrition: data.nutrition }));
+        setLocalServings(data.nutrition?.servings ?? null);
+      } else {
+        // fallback: attempt to merge any fields we can
+        setRecipe((prev) => ({ ...prev, nutrition: data }));
+        setLocalServings(data.servings ?? data.nutrition?.servings ?? null);
+      }
+      console.info("ℹ️ nutrition recalculation completed for recipe", recipeId);
+    } catch (err) {
+      console.error("❌ Error recalculating nutrition:", err?.response?.data || err.message || err);
+    } finally {
+      // leave a short cooldown before allowing another request
+      setTimeout(() => setNutritionRequested(false), 5000);
+    }
+  };
+
+  // Update recipe fetch into its own function to allow refresh/pull-to-refresh
+  const fetchRecipe = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/recipes/title/${title}`);
+      setRecipe(res.data);
+      setLocalServings(res.data?.nutrition?.servings ?? null);
+      fetchComments(res.data._id);
+      // If the recipe has no per-serving nutrition (or all zeros), trigger server-side calculation
+      const nutr = res.data.nutrition;
+      const needsCalc = !nutr || !nutr.perServing || (
+        Number(nutr.perServing.calories) === 0 &&
+        Number(nutr.perServing.protein) === 0 &&
+        Number(nutr.perServing.fat) === 0 &&
+        Number(nutr.perServing.carbs) === 0
+      );
+      if (needsCalc) {
+        window.requestIdleCallback ? window.requestIdleCallback(() => fetchNutrition(res.data._id)) : setTimeout(() => fetchNutrition(res.data._id), 50);
+      }
+    } catch (err) {
+      setError("Recipe not found.");
+    }
+  };
+
+  useEffect(() => {
+    // init fetch
     const token = localStorage.getItem("token") || sessionStorage.getItem("token");
     if (token) {
       try {
@@ -63,7 +119,51 @@ const RecipeDetail = () => {
     }
 
     fetchRecipe();
+
+    // pull-to-refresh touch handling
+    let startY = 0;
+    const onTouchStart = (e) => {
+      if (window.scrollY === 0) {
+        startY = e.touches ? e.touches[0].clientY : e.clientY;
+        pullStart.current = startY;
+      } else {
+        pullStart.current = null;
+      }
+    };
+    const onTouchMove = (e) => {
+      if (pullStart.current == null) return;
+      const y = e.touches ? e.touches[0].clientY : e.clientY;
+      const delta = Math.max(0, y - pullStart.current);
+      setPullDistance(delta);
+      setPulling(delta > 10);
+    };
+    const onTouchEnd = async () => {
+      if (pullStart.current == null) return;
+      if (pullDistance > 80) {
+        // trigger refresh
+        setPulling(false);
+        setPullDistance(0);
+        await fetchRecipe();
+        if (recipe && recipe._id) await fetchNutrition(recipe._id);
+      } else {
+        setPulling(false);
+        setPullDistance(0);
+      }
+      pullStart.current = null;
+    };
+
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: true });
+    window.addEventListener("touchend", onTouchEnd);
+
+    return () => {
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
+    };
   }, [title]);
+
+
 
   // helper to normalize possible userId shapes (object or string)
   const idOf = (val) => {
@@ -79,6 +179,13 @@ const RecipeDetail = () => {
     } catch (err) {
       console.error("Error fetching comments:", err);
     }
+  };
+
+  // allow user to update servings and re-run nutrition calculation
+  const updateServingsAndRecalc = async (newServings) => {
+    if (!recipe || !recipe._id) return;
+    setLocalServings(newServings);
+    await fetchNutrition(recipe._id, { servings: newServings });
   };
 
   // === COMMENT & REPLY LOGIC ===
@@ -215,13 +322,13 @@ const RecipeDetail = () => {
       prev.map((c) =>
         c._id === commentId
           ? {
-              ...c,
-              replies: c.replies.map((r) =>
-                r._id === replyId
-                  ? { ...r, comment: originalReplyTexts[replyId] || r.comment }
-                  : r
-              ),
-            }
+            ...c,
+            replies: c.replies.map((r) =>
+              r._id === replyId
+                ? { ...r, comment: originalReplyTexts[replyId] || r.comment }
+                : r
+            ),
+          }
           : c
       )
     );
@@ -329,6 +436,81 @@ const RecipeDetail = () => {
             <ol className="list-decimal ml-6">{recipe.steps.map((step, idx) => <li key={idx}>{step}</li>)}</ol>
           </div>
 
+          {recipe.nutrition && (
+            <div className="mt-6 text-text">
+              <h2 className="text-xl font-semibold text-leaf">Nutrition Information</h2>
+              <p>Calories: {recipe.nutrition.calories} kcal</p>
+              <p>Protein: {recipe.nutrition.protein} g</p>
+              <p>Fat: {recipe.nutrition.fat} g</p>
+              <p>Carbs: {recipe.nutrition.carbs} g</p>
+              {recipe.nutrition.perServing && (
+                <div className="mt-4">
+                  <h3 className="text-lg font-semibold text-leaf">Per Serving</h3>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => updateServingsAndRecalc(Math.max(1, (localServings ?? recipe.nutrition.servings) - 1))}
+                        className="px-2 py-1 bg-surface rounded disabled:opacity-50"
+                        disabled={nutritionRequested}
+                      >
+                        -
+                      </button>
+                      <input
+                        type="number"
+                        min={1}
+                        value={localServings ?? recipe.nutrition.servings}
+                        onChange={(e) => setLocalServings(Number(e.target.value))}
+                        onBlur={(e) => updateServingsAndRecalc(Math.max(1, Number(e.target.value) || 1))}
+                        className="w-20 text-center p-1 border rounded bg-background text-text"
+                        disabled={nutritionRequested}
+                      />
+                      <button
+                        onClick={() => updateServingsAndRecalc((localServings ?? recipe.nutrition.servings) + 1)}
+                        className="px-2 py-1 bg-surface rounded disabled:opacity-50"
+                        disabled={nutritionRequested}
+                      >
+                        +
+                      </button>
+                    </div>
+                    <div>
+                      {recipe.nutrition.estimatedServings ? (
+                        <span className="text-sm text-tamarind">(estimated)</span>
+                      ) : null}
+                    </div>
+                    {nutritionRequested && (
+                      <div className="ml-auto flex items-center gap-2">
+                        <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin" />
+                        <span className="text-sm text-muted">Calculating…</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {!nutritionRequested && (
+                    <div className="mt-3">
+                      <p>Calories: {recipe.nutrition.perServing.calories} kcal</p>
+                      <p>Protein: {recipe.nutrition.perServing.protein} g</p>
+                      <p>Fat: {recipe.nutrition.perServing.fat} g</p>
+                      <p>Carbs: {recipe.nutrition.perServing.carbs} g</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Substitutions Section */}
+          {recipe.substitutions && recipe.substitutions.length > 0 && (
+            <div className="mt-6">
+              <h2 className="text-xl font-semibold text-leaf">Substitutions</h2>
+              <ul className="list-disc ml-6">
+                {recipe.substitutions.map((sub, idx) => (
+                  <li key={idx}>{sub}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+
           {/* COMMENT SECTION */}
           <div className="pt-6 border-t border-leaf/40">
             <h2 className="text-xl font-semibold mb-2 text-leaf">💬 Comments</h2>
@@ -411,7 +593,7 @@ const RecipeDetail = () => {
                   ) : (
                     <p className="mb-2">{com.comment}</p>
                   )}
-                  
+
                   <div className="flex flex-col gap-1 text-sm text-leaf mt-2">
                     <div className="flex items-center gap-4">
                       <button

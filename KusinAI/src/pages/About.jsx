@@ -25,38 +25,14 @@ function About() {
               This platform was developed as a capstone project by Information Technology students with a passion for solving practical problems using modern tools like OpenAI, MongoDB, ReactJS, Node.js, and Google Cloud APIs. KusinAI aims to be an intelligent kitchen companion — making cooking easier, healthier, and more sustainable for every Filipino home.
             </p>
 
-            {/* Team Profiles */}
-            <h2 className="text-xl font-bold mt-8 mb-4 text-leaf">Meet the Team</h2>
-            <div className="flex flex-wrap gap-6 justify-center mb-8">
-              {/* Example team members, replace with real info/photos */}
-              <div className="bg-background/80 rounded-lg p-4 w-48 flex flex-col items-center">
-                <img src="assets/Jhowne_Profile.jpg" alt="Team Member" className="w-20 h-20 rounded-full mb-2 object-cover border-2 border-accent" />
-                <div className="font-semibold text-text">Joeshua Jhowne P. Del Rosario</div>
-                <div className="text-xs text-leaf">Developer</div>
-                <div className="text-xs mt-2 text-tamarind">"Turning ideas into code!"</div>
-              </div>
-              <div className="bg-background/80 rounded-lg p-4 w-48 flex flex-col items-center">
-                <img src="/team2.jpg" alt="Team Member" className="w-20 h-20 rounded-full mb-2 object-cover border-2 border-accent" />
-                <div className="font-semibold text-text">Maria Santos</div>
-                <div className="text-xs text-leaf">UI/UX Designer</div>
-                <div className="text-xs mt-2 text-tamarind">"Designing for every kitchen!"</div>
-              </div>
-              <div className="bg-background/80 rounded-lg p-4 w-48 flex flex-col items-center">
-                <img src="/team3.jpg" alt="Team Member" className="w-20 h-20 rounded-full mb-2 object-cover border-2 border-accent" />
-                <div className="font-semibold text-text">Jose Rizal</div>
-                <div className="text-xs text-leaf">Backend Developer</div>
-                <div className="text-xs mt-2 text-tamarind">"Making data delicious!"</div>
-              </div>
-            </div>
-
             {/* Timeline / Milestones */}
             <h2 className="text-xl font-bold mb-4 text-leaf">Project Milestones</h2>
             <ul className="list-disc ml-6 mb-6 text-left text-text">
-              <li>📝 Idea & Planning - Jan 2025</li>
-              <li>🔬 Research & Prototyping - Feb 2025</li>
-              <li>💻 Development - Mar to Jul 2025</li>
-              <li>🧪 Testing & Feedback - Aug 2025</li>
-              <li>🚀 Launch - Sep 2025</li>
+              <li>📝 Idea & Planning - Aug 2024 to Dec 2024</li>
+              <li>🔬 Research & Prototyping - Aug 2024 to June 2025</li>
+              <li>💻 Development - Jul to Nov 2025</li>
+              <li>🧪 Testing & Feedback - Nov 2025</li>
+              <li>🚀 Launch - Nov 2025</li>
             </ul>
           </div>
         </main>

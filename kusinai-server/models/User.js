@@ -43,6 +43,14 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: "",
   },
+  // New: numeric email verification code and expiry for code-based flow
+  verificationCode: {
+    type: String,
+    default: "",
+  },
+  verificationExpires: {
+    type: Date,
+  },
 
   createdAt: {
     type: Date,

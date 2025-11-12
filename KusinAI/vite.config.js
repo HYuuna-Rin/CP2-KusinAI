@@ -7,9 +7,11 @@ export default defineConfig({
     host: true,
     port: 5173,
     proxy: {
-      '/api': 'http://localhost:5000', // This forwards /api requests to your backend
+      '/api': 'http://localhost:5000',
     },
   },
+  build: {
+    outDir: 'dist', // ensure matches capacitor.config.json
+    sourcemap: false,
+  },
 });
-
-

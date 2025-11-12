@@ -55,7 +55,6 @@ function Contact() {
             <h2 className="text-2xl font-bold text-primary text-center mb-2">Contact Us</h2>
             {/* Social Links */}
             <p><span className="font-semibold text-leaf">Email:</span> <a href="mailto:kusinai27@gmail.com" className="underline text-primary">kusinai27@gmail.com</a></p>
-            <p><span className="font-semibold text-leaf">Phone:</span> <a href="tel:+639123456789" className="underline text-primary">+63 912 345 6789</a></p>
             <p><span className="font-semibold text-leaf">Address:</span> Tarlac City, Tarlac</p>
             <p><span className="font-semibold text-leaf">Office Hours:</span> Mon-Fri, 9am-5pm</p>
             <p>We're open to <span className="text-leaf">feedback</span>, <span className="text-leaf">partnerships</span>, or <span className="text-leaf">feature requests</span>. Feel free to contact us for any concerns.</p>
@@ -64,22 +63,28 @@ function Contact() {
             <h2 className="text-xl font-bold mt-6 mb-4 text-leaf">Meet the Team</h2>
             <div className="flex flex-wrap gap-6 justify-center mb-2">
               <div className="bg-background/80 rounded-lg p-4 w-48 flex flex-col items-center">
-                <img src="/team1.jpg" alt="Team Member" className="w-20 h-20 rounded-full mb-2 object-cover border-2 border-accent" />
-                <div className="font-semibold text-text">Juan Dela Cruz</div>
+                <img src="/team2.jpg" alt="Team Member" className="w-20 h-20 rounded-full mb-2 object-cover border-2 border-accent" />
+                <div className="font-semibold text-text">Catherine T. Ramos</div>
                 <div className="text-xs text-leaf">Project Lead</div>
-                <div className="text-xs mt-2 text-tamarind">"Turning ideas into code!"</div>
+                <div className="text-xs mt-2 text-tamarind"><a href="mailto:ramoscath12@gmail.com" className="underline text-primary">ramoscath12@gmail.com</a></div>
+              </div>
+              <div className="bg-background/80 rounded-lg p-4 w-48 flex flex-col items-center">
+                <img src="assets/Jhowne_Profile.jpg" alt="Team Member" className="w-20 h-20 rounded-full mb-2 object-cover border-2 border-accent" />
+                <div className="font-semibold text-text">Joeshua Jhowne P. Del Rosario</div>
+                <div className="text-xs text-leaf">Developer</div>
+                <div className="text-xs mt-2 text-tamarind"><a href="mailto:jhowne.delrosario@gmail.com" className="underline text-primary">jhowne.delrosario@gmail.com</a></div>
+              </div>
+              <div className="bg-background/80 rounded-lg p-4 w-48 flex flex-col items-center">
+                <img src="assets/Edra.jpeg" alt="Team Member" className="w-20 h-20 rounded-full mb-2 object-cover border-2 border-accent" />
+                <div className="font-semibold text-text">Edralyn T. Gardanozo</div>
+                <div className="text-xs text-leaf">Developer</div>
+                <div className="text-xs mt-2 text-tamarind"><a href="mailto:edralyngardanozo999@gmail.com" className="underline text-primary">edralyngardanozo999@gmail.com</a></div>
               </div>
               <div className="bg-background/80 rounded-lg p-4 w-48 flex flex-col items-center">
                 <img src="/team2.jpg" alt="Team Member" className="w-20 h-20 rounded-full mb-2 object-cover border-2 border-accent" />
-                <div className="font-semibold text-text">Maria Santos</div>
-                <div className="text-xs text-leaf">UI/UX Designer</div>
-                <div className="text-xs mt-2 text-tamarind">"Designing for every kitchen!"</div>
-              </div>
-              <div className="bg-background/80 rounded-lg p-4 w-48 flex flex-col items-center">
-                <img src="/team3.jpg" alt="Team Member" className="w-20 h-20 rounded-full mb-2 object-cover border-2 border-accent" />
-                <div className="font-semibold text-text">Jose Rizal</div>
-                <div className="text-xs text-leaf">Backend Developer</div>
-                <div className="text-xs mt-2 text-tamarind">"Making data delicious!"</div>
+                <div className="font-semibold text-text">Myles A. Sablan</div>
+                <div className="text-xs text-leaf">Developer</div>
+                <div className="text-xs mt-2 text-tamarind"><a href="mailto:jhowne.delrosario@gmail.com" className="underline text-primary">jhowne.delrosario@gmail.com</a></div>
               </div>
             </div>
           </div>

@@ -10,6 +10,7 @@ function Login() {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [redirectNotice, setRedirectNotice] = useState("");
   const navigate = useNavigate();
   const { showToast } = useToast();
 
@@ -63,10 +64,53 @@ function Login() {
       // ✅ Handle backend response messages cleanly
       if (err.response) {
         if (err.response.status === 403) {
-          // User not verified
-          const msg = err.response.data.message || "Email not verified. Please check your inbox.";
+          // User not verified -> redirect to verification page and prefill email
+          const msg = err.response.data?.message || "Email not verified. Please check your inbox.";
+          console.log('Login 403 response.data:', err.response.data);
+          console.log('Will redirect to /verify-email with email:', formData.email);
           showToast({ message: msg, type: "warning" });
           setErrorMsg("Email not verified. Please verify your account first.");
+          // show a visible banner in the UI so WebView users can see the redirect is happening
+          setRedirectNotice('Email not verified — redirecting to verification screen...');
+          // navigate to verification page where user can enter the 6-digit code
+          // use a short timeout to ensure toast/state updates don't block navigation in some WebViews
+          setTimeout(() => {
+            try {
+              // Prefer server-provided redirectUrl when available (more reliable in WebView/native shells)
+              const redirectUrl = err.response?.data?.redirectUrl;
+              // Prefer internal app navigation (SPA) so the verify page opens inside the app
+              try {
+                setRedirectNotice('Redirecting inside app to verification screen...');
+                navigate('/verify-email', { state: { email: formData.email } });
+                return;
+              } catch (navErr) {
+                console.warn('SPA navigation failed, will try external redirect', navErr);
+              }
+
+              // If SPA navigation wasn't possible (older WebView), fall back to server-provided full URL
+              if (redirectUrl) {
+                console.log('Falling back to server-provided redirectUrl:', redirectUrl);
+                setRedirectNotice(`Redirecting to: ${redirectUrl}`);
+                try {
+                  if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser && window.Capacitor.Plugins.Browser.open) {
+                    window.Capacitor.Plugins.Browser.open({ url: redirectUrl });
+                    return;
+                  }
+                } catch (e) { console.warn('Capacitor Browser open failed', e); }
+
+                try { window.location.href = redirectUrl; return; } catch (e) { console.warn('location.href assign failed', e); }
+                try { window.location.assign(redirectUrl); return; } catch (e) { console.warn('location.assign failed', e); }
+                try { window.open(redirectUrl, '_self'); return; } catch (e) { console.warn('window.open failed', e); }
+              }
+            } catch (navErr) {
+              console.error('Navigation to /verify-email failed:', navErr);
+              // fallback: try server-provided redirectUrl or simple path
+              try {
+                const redirectUrl = err.response?.data?.redirectUrl || '/verify-email';
+                window.location.href = redirectUrl;
+              } catch (e) { /* ignore */ }
+            }
+          }, 50);
         } else if (err.response.status === 400) {
           const msg = err.response.data.message || "Invalid credentials.";
           showToast({ message: msg, type: "error" });
@@ -98,7 +142,7 @@ function Login() {
           onClick={() => navigate("/")}
           className="text-primary text-xl font-bold cursor-pointer"
         >
-          🍳 KusinAI
+          KusinAI
         </div>
       </div>
 
@@ -112,6 +156,12 @@ function Login() {
           {errorMsg && (
             <div className="bg-accent/20 border border-accent text-accent px-4 py-2 rounded text-center mb-2 animate-pulse">
               {errorMsg}
+            </div>
+          )}
+
+          {redirectNotice && (
+            <div className="bg-yellow-50 border border-yellow-300 text-yellow-800 px-4 py-2 rounded text-center mb-2">
+              {redirectNotice}
             </div>
           )}
 
