@@ -50,9 +50,15 @@ if (process.env.NODE_ENV === "production") {
     console.log("🌐 Serving frontend from:", clientBuildPath);
     app.use(express.static(clientBuildPath));
 
-    app.get("*", (req, res) => {
-      res.sendFile(path.join(clientBuildPath, "index.html"));
+    // ✅ Safe fallback to serve index.html for any route (avoids path-to-regexp crash)
+    app.use((req, res, next) => {
+      if (req.method === "GET" && !req.path.startsWith("/api")) {
+        res.sendFile(path.join(clientBuildPath, "index.html"));
+      } else {
+        next();
+      }
     });
+
   } else {
     console.warn("⚠️ Skipping frontend static serve — dist folder not found");
   }

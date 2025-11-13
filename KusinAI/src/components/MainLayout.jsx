@@ -110,7 +110,7 @@ const MainLayout = ({ children }) => {
         {/* Header / Topbar */}
         <header className="relative px-3 py-2 shadow-md flex items-center justify-between gap-2 md:px-6 md:py-3 min-h-[56px] bg-surface/90">
           <div className="absolute inset-0 bg-primary" style={{ opacity: 0.7, zIndex: 1 }} />
-          <div className="relative w-full flex items-center justify-between gap-2" style={{ zIndex: 2 }}>
+          <div className="relative w-full h-14 flex items-center justify-between gap-2" style={{ zIndex: 2 }}>
             {/* Logo */}
             <Link
               to="/"
@@ -126,9 +126,10 @@ const MainLayout = ({ children }) => {
               <img
                 src="/assets/KusinAILogo.png"
                 alt="KusinAI Logo"
-                className="h-full max-h-[36px] w-auto object-contain"
+                className="h-full w-auto object-contain"
                 style={{ marginRight: "0.5rem" }}
               />
+              <span className="select-none bg-gradient-to-r from-leaf to-accent bg-clip-text text-transparent tracking-wide leading-none drop-shadow-sm">KusinAI</span>
             </Link>
 
             {/* Search Bar */}

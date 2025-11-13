@@ -16,6 +16,18 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // Place this inside the android { ... } block
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            def project = "KusinAI"
+            def SEP = "_"
+            def buildType = variant.buildType.name
+            def version = variant.versionName
+            def newApkName = project + SEP + version + SEP + buildType + ".apk"
+            outputFileName = newApkName
+        }
+    }
+
     // Load keystore properties if present (create a keystore.properties file in the project root)
     def keystorePropertiesFile = rootProject.file("keystore.properties")
     def keystoreProperties = new Properties()
