@@ -1,3 +1,7 @@
+/*
+  File: src/pages/OpenAppRedirect.jsx
+  Purpose: Bridge page to deep-link users into the mobile app.
+*/
 import { useEffect, useState } from "react";
 
 const API_URL = import.meta.env.VITE_API_URL || "";

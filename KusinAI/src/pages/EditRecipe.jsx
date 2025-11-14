@@ -1,3 +1,7 @@
+/*
+  File: src/pages/EditRecipe.jsx
+  Purpose: Page for editing an existing recipe.
+*/
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 

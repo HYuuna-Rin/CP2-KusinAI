@@ -1,3 +1,14 @@
+/*
+  File: server.js
+  Purpose: Backend entrypoint for the KusinAI API server.
+  Responsibilities:
+  - Load environment variables and initialize Express.
+  - Configure core middleware (CORS, JSON parsing, static, etc.).
+  - Connect to the database and validate required config.
+  - Mount feature routes (auth, user, recipes, nutrition, scanner, chat, admin, feedback, test email).
+  - Start the HTTP server and handle process-level errors.
+  Notes: Keep business logic in models/routes/services; keep this file focused on wiring.
+*/
 import "dotenv/config";
 import express from "express";
 import mongoose from "mongoose";

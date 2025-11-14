@@ -1,3 +1,7 @@
+/*
+  File: src/pages/VerifyEmail.jsx
+  Purpose: Email verification flow page for newly registered users.
+*/
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";

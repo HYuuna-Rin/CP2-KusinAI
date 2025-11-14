@@ -1,3 +1,11 @@
+/*
+  File: routes/feedback.js
+  Purpose: Collect user feedback and related admin review endpoints.
+  Responsibilities:
+  - Accept feedback submissions and persist them.
+  - Expose admin-only views/actions to triage feedback.
+  Notes: Consider spam mitigation and rate limiting.
+*/
 import express from "express";
 import nodemailer from "nodemailer";
 const router = express.Router();

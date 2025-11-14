@@ -1,3 +1,11 @@
+/*
+  File: routes/scanner.js
+  Purpose: Ingredient scanner endpoints (e.g., OCR/vision pipeline inputs/outputs).
+  Responsibilities:
+  - Receive client scans, parse ingredients, and normalize data.
+  - Delegate to scanning/recognition services; return clean ingredient lists.
+  Notes: Validate payloads; consider size limits and security scanning.
+*/
 // routes/scanner.js
 import express from "express";
 import fetch from "node-fetch";

@@ -1,3 +1,7 @@
+/*
+  File: src/pages/AdminDashboard.jsx
+  Purpose: Admin-only dashboard for managing users, recipes, and system tasks.
+*/
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";

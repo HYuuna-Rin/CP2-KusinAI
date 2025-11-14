@@ -1,3 +1,11 @@
+/*
+  File: routes/chat.js
+  Purpose: Chat-related endpoints (e.g., messaging or AI assistant backend hooks).
+  Responsibilities:
+  - Provide REST endpoints to support chat features.
+  - Bridge to realtime or external AI services if applicable.
+  Notes: Keep sensitive data and tokens out of logs.
+*/
 // routes/chat.js
 import express from "express";
 import dotenv from "dotenv";

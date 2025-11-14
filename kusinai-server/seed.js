@@ -1,3 +1,12 @@
+/*
+  File: seed.js
+  Purpose: Database seeding/initialization script for local/dev environments.
+  Responsibilities:
+  - Load environment variables.
+  - Connect to the database and insert/update baseline data (users, recipes, etc.).
+  - Provide deterministic data useful for development, testing, and demos.
+  Notes: Intended for non-production use unless carefully curated. Avoid destructive operations without explicit flags.
+*/
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import Recipe from "./models/Recipe.js";

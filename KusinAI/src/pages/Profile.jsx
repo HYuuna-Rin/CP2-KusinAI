@@ -1,3 +1,7 @@
+/*
+  File: src/pages/Profile.jsx
+  Purpose: User profile page to view and edit personal information.
+*/
 import React, { useState, useEffect } from "react";
 import { FiCamera } from "react-icons/fi";
 import { Link, useNavigate } from "react-router-dom";

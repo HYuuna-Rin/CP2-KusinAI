@@ -1,3 +1,11 @@
+/*
+  File: routes/nutritionRoutes.js
+  Purpose: Nutrition analysis endpoints and related utilities.
+  Responsibilities:
+  - Handle nutrition lookups/calculations and return structured nutrition info.
+  - Integrate with external services or internal calculators as needed.
+  Notes: Be mindful of rate limits and caching if calling externals.
+*/
 // routes/nutritionRoutes.js
 import express from "express";
 import axios from "axios";

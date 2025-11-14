@@ -1,3 +1,11 @@
+/*
+  File: src/DeepLinkHandler.jsx
+  Purpose: Handle deep links or app-specific URL intents.
+  Responsibilities:
+  - Parse incoming parameters and route users accordingly.
+  - Coordinate with mobile (Capacitor) or web routing as needed.
+  Notes: Keep logic resilient to missing/invalid params.
+*/
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { App } from "@capacitor/app";

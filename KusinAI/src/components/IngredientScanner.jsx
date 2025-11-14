@@ -1,3 +1,11 @@
+/*
+  File: src/components/IngredientScanner.jsx
+  Purpose: UI component to scan and extract ingredient text from images.
+  Responsibilities:
+  - Capture/accept an image input and invoke scanner APIs.
+  - Return normalized ingredient strings back to parent via callbacks.
+  Notes: Heavy OCR/ML work should live in the backend or native layers.
+*/
 import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";

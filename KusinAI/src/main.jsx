@@ -1,3 +1,11 @@
+/*
+  File: src/main.jsx
+  Purpose: React application bootstrap.
+  Responsibilities:
+  - Initialize root rendering and attach React Router/Tailwind setup.
+  - Import global styles and render <App/>.
+  Notes: Avoid app logic here; keep it minimal and stable.
+*/
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';

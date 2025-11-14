@@ -1,3 +1,11 @@
+/*
+  File: src/context/ToastContext.jsx
+  Purpose: Provide a global toast/notification dispatch mechanism.
+  Responsibilities:
+  - Offer functions to show/hide toasts and manage their lifecycle.
+  - Supply context consumed by the Toasts component.
+  Notes: Keep API minimal and consistent.
+*/
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import Toasts from '../components/Toasts';
 

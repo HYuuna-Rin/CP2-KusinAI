@@ -1,3 +1,7 @@
+/*
+  File: src/pages/Feedback.jsx
+  Purpose: Submit feedback to the team.
+*/
  import React, { useState } from "react";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";

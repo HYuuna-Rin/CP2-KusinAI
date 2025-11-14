@@ -1,3 +1,11 @@
+/*
+  File: routes/user.js
+  Purpose: User profile and account management API endpoints.
+  Responsibilities:
+  - Fetch/update user profiles, preferences, roles (admin-protected operations as needed).
+  - Enforce authentication/authorization middleware for protected routes.
+  Notes: Keep validation and policy checks clear and explicit.
+*/
 import express from "express";
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";

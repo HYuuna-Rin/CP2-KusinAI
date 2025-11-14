@@ -1,3 +1,11 @@
+/*
+  File: models/User.js
+  Purpose: Mongoose schema/model for application users.
+  Responsibilities:
+  - Define the user document shape (identity, auth credentials, role, profile fields).
+  - Expose the User model for CRUD operations and authentication workflows.
+  Notes: Keep schema methods/statics cohesive; do not embed request logic here.
+*/
 import mongoose from "mongoose";
 
 // Define what fields a User will have

@@ -1,3 +1,11 @@
+/*
+  File: scripts/backfillProfileImages.js
+  Purpose: One-off/migration script to (re)populate user profile images.
+  Responsibilities:
+  - Iterate users and set/patch profile image fields as needed.
+  - Report progress and errors; support dry-run if implemented.
+  Notes: Run with caution and backups; intended for ops/maintenance.
+*/
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import Recipe from "../models/Recipe.js";

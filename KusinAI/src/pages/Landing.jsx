@@ -1,3 +1,7 @@
+/*
+  File: src/pages/Landing.jsx
+  Purpose: Public landing/home page introducing KusinAI.
+*/
 import React from "react";
 import { Link } from "react-router-dom";
 import PageTransition from "../components/PageTransition";

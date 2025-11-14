@@ -1,3 +1,7 @@
+/*
+  File: src/pages/Login.jsx
+  Purpose: User login page to authenticate and start a session.
+*/
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";

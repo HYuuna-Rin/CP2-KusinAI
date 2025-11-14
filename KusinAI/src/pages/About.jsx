@@ -1,3 +1,7 @@
+/*
+  File: src/pages/About.jsx
+  Purpose: About page describing KusinAI and its mission.
+*/
 import React from "react";
 import PageTransition from "../components/PageTransition";
 import MainLayout from "../components/MainLayout";

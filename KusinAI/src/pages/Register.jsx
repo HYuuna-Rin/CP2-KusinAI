@@ -1,3 +1,7 @@
+/*
+  File: src/pages/Register.jsx
+  Purpose: User registration/sign-up page.
+*/
 import React, { useState } from "react";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";

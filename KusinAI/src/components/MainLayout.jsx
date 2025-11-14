@@ -1,3 +1,11 @@
+/*
+  File: src/components/MainLayout.jsx
+  Purpose: Global layout component providing top bar, sidebar, and page frame.
+  Responsibilities:
+  - Render the header (logo, search, user/menu), sidebar navigation, and content outlet.
+  - Manage UI state for sidebar and ingredient scanner modal.
+  Notes: Keep presentational; business logic belongs in contexts/services.
+*/
 import IngredientScanner from "./IngredientScanner";
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";

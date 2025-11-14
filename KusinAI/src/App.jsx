@@ -1,3 +1,11 @@
+/*
+  File: src/App.jsx
+  Purpose: Client app root for routing and global layout handling.
+  Responsibilities:
+  - Define React Router routes and wrap pages with shared layout.
+  - Provide top-level providers (contexts) when needed.
+  Notes: Keep this focused on routing structure; page logic lives in pages/components.
+*/
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import PrivateRoute from './components/PrivateRoute';

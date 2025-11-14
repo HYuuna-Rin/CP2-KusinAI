@@ -1,3 +1,11 @@
+/*
+  File: src/components/PageTransition.jsx
+  Purpose: Wrapper to animate route/page transitions.
+  Responsibilities:
+  - Apply enter/exit animations around routed content.
+  - Improve perceived navigation smoothness.
+  Notes: Keep animation settings configurable.
+*/
 import React from "react";
 import { motion } from "framer-motion";
 

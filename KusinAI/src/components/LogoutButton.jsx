@@ -1,3 +1,11 @@
+/*
+  File: src/components/LogoutButton.jsx
+  Purpose: Encapsulated logout control.
+  Responsibilities:
+  - Clear auth tokens/session and redirect as needed.
+  - Provide consistent styling and confirmation UX if applicable.
+  Notes: Reuse in navs or account menus.
+*/
 import React from "react";
 import { logout } from "../utils/auth";
 

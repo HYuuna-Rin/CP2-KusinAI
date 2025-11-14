@@ -1,3 +1,11 @@
+/*
+  File: scripts/migrateNutritionNumbers.js
+  Purpose: Data migration to adjust/normalize nutrition fields.
+  Responsibilities:
+  - Traverse recipe documents and migrate nutrition-related numbers or schema changes.
+  - Provide idempotent runs when possible; log changes for auditing.
+  Notes: Test on staging/snapshots before production.
+*/
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import Recipe from '../models/Recipe.js';

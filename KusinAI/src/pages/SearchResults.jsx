@@ -1,3 +1,7 @@
+/*
+  File: src/pages/SearchResults.jsx
+  Purpose: Show recipe search results based on query/ingredients.
+*/
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { FaRegStar, FaStar, FaComments } from "react-icons/fa";

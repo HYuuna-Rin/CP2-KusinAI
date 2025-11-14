@@ -1,3 +1,7 @@
+/*
+  File: src/pages/Contact.jsx
+  Purpose: Contact page for user inquiries/support.
+*/
 import React, { useState } from "react";
 import axios from "axios";
 const API_URL = import.meta.env.VITE_API_URL;

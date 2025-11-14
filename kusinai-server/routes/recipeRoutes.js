@@ -1,3 +1,11 @@
+/*
+  File: routes/recipeRoutes.js
+  Purpose: Recipe CRUD and search/browse endpoints.
+  Responsibilities:
+  - Create, read, update, delete recipes; list, filter, and search.
+  - Apply auth/role checks for protected operations (e.g., admin, owner).
+  Notes: Delegate heavy processing (e.g., nutrition) to services.
+*/
 import express from "express";
 import Recipe from "../models/Recipe.js";
 import User from "../models/User.js"; // ✅ FIXED: Import User model

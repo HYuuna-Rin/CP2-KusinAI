@@ -1,3 +1,11 @@
+/*
+  File: routes/testEmail.js
+  Purpose: Utility endpoints for verifying email delivery configuration.
+  Responsibilities:
+  - Trigger test emails and report transport status/errors.
+  - Help diagnose SMTP/API credentials and template rendering.
+  Notes: Restrict access in production; avoid exposing sensitive info.
+*/
 import express from "express";
 import nodemailer from "nodemailer";
 

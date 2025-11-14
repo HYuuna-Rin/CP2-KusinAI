@@ -1,3 +1,11 @@
+/*
+  File: routes/auth.js
+  Purpose: Authentication routes (register, login, token flows).
+  Responsibilities:
+  - Validate credentials, issue tokens/sessions, and manage auth flows.
+  - Delegate business logic to controllers/services; return API-friendly responses.
+  Notes: Keep route handlers thin; avoid embedding auth logic directly here.
+*/
 import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";

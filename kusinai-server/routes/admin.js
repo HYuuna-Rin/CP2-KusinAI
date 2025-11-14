@@ -1,3 +1,11 @@
+/*
+  File: routes/admin.js
+  Purpose: Admin-only endpoints for managing system resources and users.
+  Responsibilities:
+  - Provide privileged operations (e.g., moderation, metrics, data maintenance).
+  - Enforce strict authorization; log sensitive operations for auditing.
+  Notes: Keep surface area small; avoid mixing with public routes.
+*/
 import express from "express";
 import User from "../models/User.js";
 import Recipe from "../models/Recipe.js";

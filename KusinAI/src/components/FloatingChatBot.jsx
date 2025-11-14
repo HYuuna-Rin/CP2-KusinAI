@@ -1,3 +1,11 @@
+/*
+  File: src/components/FloatingChatBot.jsx
+  Purpose: Floating chat widget component for quick AI/user assistance.
+  Responsibilities:
+  - Toggleable chat UI anchored on the page.
+  - Bridge to chat APIs/services and display messages.
+  Notes: Keep network calls abstracted for testability.
+*/
 // src/components/FloatingChatBot.jsx
 import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";

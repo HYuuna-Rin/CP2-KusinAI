@@ -1,3 +1,7 @@
+/*
+  File: src/pages/ManageUsers.jsx
+  Purpose: Admin page to view and manage user accounts/roles.
+*/
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useToast } from "../context/ToastContext";

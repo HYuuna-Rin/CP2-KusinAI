@@ -1,3 +1,11 @@
+/*
+  File: src/context/AuthContext.jsx
+  Purpose: Centralized authentication state and helpers for the frontend.
+  Responsibilities:
+  - Provide login/logout, token persistence, and user info to components.
+  - Expose a React Context for easy consumption across the app.
+  Notes: Keep in sync with server auth contracts.
+*/
 import React, { createContext, useContext, useState, useEffect } from 'react';
 // lightweight JWT decode (only decodes payload, does not verify signature)
 const jwtDecode = (token) => {

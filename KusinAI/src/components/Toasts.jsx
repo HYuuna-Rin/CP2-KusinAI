@@ -1,3 +1,11 @@
+/*
+  File: src/components/Toasts.jsx
+  Purpose: Reusable toast/notification component.
+  Responsibilities:
+  - Display transient messages for success, errors, and info.
+  - Integrate with Toast context for global usage.
+  Notes: Keep accessible (ARIA roles) and non-blocking.
+*/
 import React from 'react';
 
 const ToastItem = ({ t }) => {

@@ -1,3 +1,7 @@
+/*
+  File: src/pages/RecipeDetail.jsx
+  Purpose: Display full details of a single recipe.
+*/
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useLocation, Link, useNavigate } from "react-router-dom";
 import { FiArrowLeft, FiEdit, FiTrash2 } from "react-icons/fi";

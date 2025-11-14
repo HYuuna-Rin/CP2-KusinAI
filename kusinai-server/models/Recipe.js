@@ -1,3 +1,11 @@
+/*
+  File: models/Recipe.js
+  Purpose: Mongoose schema/model for recipes managed by the system.
+  Responsibilities:
+  - Define recipe fields (title, ingredients, instructions, nutrition, media, ownership).
+  - Support querying and persistence for recipe-related features.
+  Notes: Keep validation and indexes here; heavy logic belongs in services.
+*/
 import mongoose from "mongoose";
 
 const replySchema = new mongoose.Schema({

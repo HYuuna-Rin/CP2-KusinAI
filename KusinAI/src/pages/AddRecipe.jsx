@@ -1,3 +1,7 @@
+/*
+  File: src/pages/AddRecipe.jsx
+  Purpose: Form page for creating new recipes.
+*/
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
