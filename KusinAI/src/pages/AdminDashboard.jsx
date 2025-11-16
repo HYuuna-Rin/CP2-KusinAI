@@ -88,16 +88,25 @@ const AdminDashboard = () => {
 
   // Handle Delete Recipe
   const confirmDeleteRecipe = async () => {
+    if (!deleteId) return;
     try {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-      await axios.delete(`${API_URL}/api/recipes/${deleteId}`, {
+      if (!token) {
+        console.error("❌ No auth token for deletion");
+        return;
+      }
+      const res = await axios.delete(`${API_URL}/api/recipes/${encodeURIComponent(deleteId)}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setDeleteModal(false);
-      setDeleteId(null);
-      fetchRecipes();
+      if (res.status === 200 || res.status === 204) {
+        setDeleteModal(false);
+        setDeleteId(null);
+        fetchRecipes();
+      } else {
+        console.warn("⚠️ Unexpected delete status", res.status);
+      }
     } catch (err) {
-      console.error("❌ Error deleting recipe:", err);
+      console.error("❌ Error deleting recipe:", err?.response?.data || err.message || err);
     }
   };
 
@@ -159,7 +168,7 @@ const AdminDashboard = () => {
                   <td className="p-2 border border-gray-300">
                     <span
                       className="text-blue-700 hover:underline cursor-pointer"
-                      onClick={() => navigate(`/recipes/title/${encodeURIComponent(r.title)}`)}
+                      onClick={() => navigate(`/recipes/${encodeURIComponent(r._id)}`)}
                     >
                       {r.title}
                     </span>
@@ -167,7 +176,7 @@ const AdminDashboard = () => {
                   <td className="p-2 border border-gray-300">{r.region}</td>
                   <td className="p-2 border border-gray-300 flex gap-2">
                     <button
-                      onClick={() => navigate(`/recipes/title/${encodeURIComponent(r.title)}`)}
+                      onClick={() => navigate(`/recipes/${encodeURIComponent(r._id)}`)}
                       className="px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded flex items-center gap-1"
                     >
                       <FiEdit /> Edit

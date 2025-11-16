@@ -8,6 +8,7 @@ import { useToast } from "../context/ToastContext";
 
 const API_URL = import.meta.env.VITE_API_URL;
 import MainLayout from "../components/MainLayout";
+import { Link, useNavigate } from "react-router-dom";
 
 const ManageUsers = () => {
   const [users, setUsers] = useState([]);
@@ -61,10 +62,15 @@ const ManageUsers = () => {
     }
   };
 
+  const navigate = useNavigate();
   return (
     <MainLayout>
       <div className="max-w-5xl mx-auto bg-surface/90 rounded-lg shadow p-6 mt-6 text-text transition-all">
-        <h1 className="text-3xl font-bold mb-6">👥 Manage Users</h1>
+        <div className="flex items-center justify-between mb-4">
+          <button onClick={() => navigate(-1)} className="text-leaf hover:text-accent font-medium">← Back</button>
+          <h1 className="text-2xl sm:text-3xl font-bold">Manage Users</h1>
+          <div className="w-14" />
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse table-auto">
             <thead>

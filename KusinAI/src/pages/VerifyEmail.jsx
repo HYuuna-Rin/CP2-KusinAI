@@ -7,6 +7,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { useToast } from "../context/ToastContext";
 import { useAuth } from "../context/AuthContext";
+import LoadingOverlay from "../components/ui/loading";
 
 const VerifyEmail = () => {
   const [message, setMessage] = useState("");
@@ -165,6 +166,7 @@ const VerifyEmail = () => {
             Already verified? <a href="/login" className="text-accent font-medium hover:underline">Login</a>
           </p>
         </form>
+        {(loading || resendLoading) && <LoadingOverlay text={loading ? 'Verifying...' : 'Resending...'} />}
       </div>
     </div>
   );

@@ -8,6 +8,7 @@
 */
 // src/components/FloatingChatBot.jsx
 import React, { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import axios from "axios";
 import { FiMessageCircle, FiX } from "react-icons/fi";
 import ReactMarkdown from "react-markdown";
@@ -65,8 +66,19 @@ const FloatingChatBot = ({ recipe }) => {
     setInput("");
   };
 
-  return (
-    <div className="fixed bottom-4 right-4 z-50">
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <div
+      className="fixed bottom-3 right-3 z-50 select-none"
+      style={{
+        bottom: `calc(0.5rem + env(safe-area-inset-bottom))`,
+        right: `calc(0.5rem + env(safe-area-inset-right))`,
+      }}
+    >
       {isOpen ? (
         <div className="w-80 h-96 bg-white rounded-2xl shadow-2xl flex flex-col border border-gray-200 overflow-hidden">
           {/* Header */}
@@ -140,12 +152,14 @@ const FloatingChatBot = ({ recipe }) => {
       ) : (
         <button
           onClick={() => setIsOpen(true)}
-          className="bg-yellow-500 hover:bg-yellow-600 text-white p-4 rounded-full shadow-lg flex items-center justify-center animate-pulse"
+          className="bg-yellow-500 hover:bg-yellow-600 text-white p-4 rounded-full shadow-lg flex items-center justify-center"
+          aria-label="Open chat assistant"
         >
           <FiMessageCircle size={24} />
         </button>
       )}
-    </div>
+    </div>,
+    document.body
   );
 };
 

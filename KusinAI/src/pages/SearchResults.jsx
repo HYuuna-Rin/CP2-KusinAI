@@ -1,4 +1,4 @@
-/*
+ /*
   File: src/pages/SearchResults.jsx
   Purpose: Show recipe search results based on query/ingredients.
 */
@@ -10,11 +10,15 @@ import axios from "axios";
 const API_URL = import.meta.env.VITE_API_URL;
 import PageTransition from "../components/PageTransition";
 import MainLayout from "../components/MainLayout";
+import LoadingOverlay from "../components/ui/loading";
+import { useToast } from "../context/ToastContext";
 
 const SearchResults = () => {
   const [searchInput, setSearchInput] = useState("");
   const [allRecipes, setAllRecipes] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { showToast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -47,6 +51,9 @@ const SearchResults = () => {
         }
       } catch (err) {
         console.error("❌ Failed to fetch data:", err);
+        showToast({ message: "Failed to load recipes", type: "error" });
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -71,8 +78,10 @@ const SearchResults = () => {
         { favorites: updatedFavorites },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      showToast({ message: favoriteIds.includes(recipeId) ? "Removed from favorites" : "Added to favorites", type: "success" });
     } catch (err) {
       console.error("❌ Failed to update favorites:", err);
+      showToast({ message: "Failed to update favorites", type: "error" });
     }
   };
 
@@ -99,7 +108,7 @@ const SearchResults = () => {
     <PageTransition>
       <MainLayout>
         <main className="flex-grow overflow-y-auto p-6">
-          <div className="bg-white bg-opacity-80 p-6 rounded-xl max-w-3xl mx-auto">
+          <div className="bg-surface/90 backdrop-blur-sm p-6 rounded-xl max-w-3xl mx-auto">
             <h2 className="text-xl font-semibold text-black mb-4">
               Showing results for: <span className="italic">{searchQuery}</span>
             </h2>
@@ -114,7 +123,7 @@ const SearchResults = () => {
                 >
                   <div>
                     <Link
-                      to={`/recipes/title/${encodeURIComponent(recipe.title)}?query=${searchQuery}`}
+                      to={`/recipes/${encodeURIComponent(recipe._id)}?query=${searchQuery}`}
                       state={{ fromQuery: searchQuery }}
                     >
                       <h3 className="text-lg font-bold text-black hover:underline">
@@ -138,6 +147,7 @@ const SearchResults = () => {
               ))
             )}
           </div>
+          {loading && <LoadingOverlay text="Loading recipes..." />}
         </main>
       </MainLayout>
     </PageTransition>

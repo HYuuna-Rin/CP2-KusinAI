@@ -8,6 +8,9 @@ import axios from "axios";
 const API_URL = import.meta.env.VITE_API_URL;
 import { useNavigate, useParams } from "react-router-dom";
 import MainLayout from "../components/MainLayout";
+import Input from "../components/ui/input";
+import Textarea from "../components/ui/textarea";
+import Button from "../components/ui/button";
 
 const EditRecipe = () => {
   const { id } = useParams();
@@ -49,41 +52,39 @@ const EditRecipe = () => {
 
   return (
     <MainLayout>
-      <div className="max-w-3xl mx-auto bg-white rounded-lg shadow p-6 mt-6">
-        <h1 className="text-2xl font-bold mb-4">✏️ Edit Recipe</h1>
+      <div className="max-w-3xl mx-auto bg-surface rounded-lg shadow p-6 mt-6">
+        <div className="flex items-center gap-3 mb-4">
+          <img src="/assets/KusinAILogo.png" alt="logo" className="h-10 w-10 rounded-full object-contain" />
+          <h1 className="text-2xl font-bold text-primary">Edit Recipe</h1>
+        </div>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input
+          <Input
             type="text"
             placeholder="Recipe Title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full border p-2 rounded"
+            required
           />
-          <input
+          <Input
             type="text"
             placeholder="Region"
             value={region}
             onChange={(e) => setRegion(e.target.value)}
-            className="w-full border p-2 rounded"
+            required
           />
-          <textarea
+          <Textarea
             placeholder="Ingredients (comma separated)"
             value={ingredients}
             onChange={(e) => setIngredients(e.target.value)}
-            className="w-full border p-2 rounded"
+            required
           />
-          <textarea
+          <Textarea
             placeholder="Instructions"
             value={instructions}
             onChange={(e) => setInstructions(e.target.value)}
-            className="w-full border p-2 rounded"
+            required
           />
-          <button
-            type="submit"
-            className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Update Recipe
-          </button>
+          <Button type="submit" className="w-full">Update Recipe</Button>
         </form>
       </div>
     </MainLayout>

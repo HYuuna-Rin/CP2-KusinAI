@@ -204,7 +204,7 @@ if (!validator.isEmail(email))
 
     res.status(201).json({
       message:
-        "Registration successful! Please check your email to verify your account (expires in 24 hours).",
+        "Registration successful! Please check your email to verify your account (expires in 30 minutes).",
     });
   } catch (err) {
     console.error("❌ Registration Error:", err);
@@ -280,6 +280,17 @@ router.post("/login", async (req, res) => {
 });
 
 /* =========================================================
+   🚪 LOGOUT (Stateless JWT)
+   ========================================================= */
+// For stateless JWT, logout is client-side (remove token). This endpoint exists
+// for symmetry and future token revocation support. Clients may call it then
+// clear their stored token.
+router.post("/logout", (req, res) => {
+  // Optionally implement token blacklist here.
+  res.json({ message: "Logged out successfully." });
+});
+
+/* =========================================================
    📩 VERIFY EMAIL
    ========================================================= */
 // Verify by code: POST /api/auth/verify-code  { email, code }
@@ -337,6 +348,8 @@ router.post("/resend-code", async (req, res) => {
     res.status(500).json({ message: "Failed to resend verification code." });
   }
 });
+
+// Forgot password functionality removed for now.
 
 /* =========================================================
    🗒️ NOTES & FAVORITES

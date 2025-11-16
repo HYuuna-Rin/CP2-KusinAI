@@ -8,6 +8,10 @@ import { Link, useNavigate } from "react-router-dom";
 import PageTransition from "../components/PageTransition";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
+import Input from "../components/ui/input";
+import Textarea from "../components/ui/textarea";
+import Button from "../components/ui/button";
+import { useToast } from "../context/ToastContext";
 
 const API_URL = import.meta.env.VITE_API_URL;
 import MainLayout from "../components/MainLayout";
@@ -23,6 +27,7 @@ const Profile = () => {
   const [email, setEmail] = useState("");
   const [userId, setUserId] = useState(null);
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   useEffect(() => {
     // Support both localStorage and sessionStorage for token
@@ -104,9 +109,11 @@ const Profile = () => {
       .then((data) => {
         console.log("✅ Notes saved:", data);
         setShowSaveButton(false);
+        showToast({ message: "Notes saved", type: "success" });
       })
       .catch((err) => {
         console.error("❌ Failed to save notes:", err);
+        showToast({ message: "Failed to save notes", type: "error" });
       });
   };
 
@@ -150,8 +157,8 @@ const Profile = () => {
   return (
     <PageTransition>
       <MainLayout>
-        <main className="flex-grow flex items-center justify-center bg-background/90 text-text">
-          <div className="bg-surface/90 rounded-xl text-text p-6 w-full max-w-3xl mx-auto mt-8 shadow-lg">
+        <main className="flex-grow flex items-center justify-center text-text">
+          <div className="bg-surface/90 backdrop-blur-sm rounded-xl text-text p-6 w-full max-w-3xl mx-auto mt-8 shadow-lg">
             <div className="flex items-center mb-6">
               <div className="w-20 h-20 bg-background rounded-full overflow-hidden mr-4 relative border-2 border-leaf">
                 {profileImage ? (
@@ -174,10 +181,8 @@ const Profile = () => {
             </div>
 
             <div className="mb-6">
-              <textarea
-                className="w-full p-3 text-text rounded-md focus:outline-none bg-background border border-leaf/40 focus:border-leaf"
+              <Textarea
                 placeholder="Add personal notes..."
-                rows="4"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 onClick={() => setShowSaveButton(true)}
@@ -185,12 +190,9 @@ const Profile = () => {
             </div>
 
             {showSaveButton && (
-              <button
-                onClick={handleSaveNotes}
-                className="mt-2 px-4 py-2 bg-primary text-white font-semibold rounded hover:bg-leaf transition duration-200"
-              >
+              <Button onClick={handleSaveNotes} className="mt-2">
                 Save
-              </button>
+              </Button>
             )}
 
             <div className="grid grid-cols-2 gap-6">
@@ -203,15 +205,12 @@ const Profile = () => {
                     favorites.map((recipe) =>
                       recipe && recipe._id && recipe.title ? (
                         <li key={recipe._id} className="flex justify-between items-center">
-                          <Link to={`/recipes/title/${encodeURIComponent(recipe.title)}`} className="text-accent hover:underline">
+                          <Link to={`/recipes/${encodeURIComponent(recipe._id)}`} className="text-accent hover:underline">
                             {recipe.title}
                           </Link>
-                          <button
-                            onClick={() => handleRemoveFavorite(recipe._id)}
-                            className="ml-2 text-xs px-2 py-1 bg-accent hover:bg-leaf rounded text-white"
-                          >
+                          <Button onClick={() => handleRemoveFavorite(recipe._id)} className="ml-2 text-xs px-2 py-1">
                             Remove
-                          </button>
+                          </Button>
                         </li>
                       ) : null
                     )

@@ -37,6 +37,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/openapp" element={<OpenAppRedirect />} />
+        {/* Forgot password temporarily removed */}
 
 
         {/* User Protected Routes */}

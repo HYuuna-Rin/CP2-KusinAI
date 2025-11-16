@@ -7,13 +7,14 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: "#7BB661",     // Fresh Basil Green – main brand color
-    accent: "#E07A41",      // Warm Orange – buttons & highlights (darker for contrast)
-        background: "#FFF8F0",  // Soft Rice White – app background
-        surface: "#F2CC8F",     // Latte Beige – cards, modals
-        text: "#3D2C2E",        // Cocoa Brown – main text
-        leaf: "#5B8C5A",        // Banana Leaf Green – accent/hover
-        tamarind: "#9E6F43",    // Warm Brown – footer/deep accents
+        // Fresh & Professional palette
+        primary: "#4CAF50",       // Fresh Green – navbar, primary actions
+        accent: "#FF8A42",        // Warm Tangerine – CTAs, highlights
+        background: "#FAFAF5",    // Off-white – app background
+        surface: "#FFF8EE",       // Very light warm beige – cards, modals
+        text: "#2E2E2E",          // Dark charcoal – main text
+        leaf: "#2E7D32",          // Dark green – links/hover
+        tamarind: "#8B5E34",      // Warm neutral brown – subtle accents
       },
     },
   },

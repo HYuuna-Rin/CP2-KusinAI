@@ -6,6 +6,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { FiEye, FiEyeOff } from "react-icons/fi";
+import Button from "../components/ui/button";
+import Input from "../components/ui/input";
 import { jwtDecode } from "jwt-decode";
 import { useToast } from "../context/ToastContext";
 
@@ -15,6 +17,7 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [redirectNotice, setRedirectNotice] = useState("");
+  const [isBanned, setIsBanned] = useState(false);
   const navigate = useNavigate();
   const { showToast } = useToast();
 
@@ -68,51 +71,26 @@ function Login() {
       // ✅ Handle backend response messages cleanly
       if (err.response) {
         if (err.response.status === 403) {
+          const serverMsg = err.response.data?.message || "Access denied.";
+          // If banned, stay on login and show error (no redirect)
+          if (/banned/i.test(serverMsg)) {
+            showToast({ message: serverMsg, type: "error" });
+            setErrorMsg(serverMsg);
+            setIsBanned(true);
+            return; // Do not proceed to verification redirect logic
+          }
           // User not verified -> redirect to verification page and prefill email
-          const msg = err.response.data?.message || "Email not verified. Please check your inbox.";
+          const msg = serverMsg || "Email not verified. Please check your inbox.";
           console.log('Login 403 response.data:', err.response.data);
-          console.log('Will redirect to /verify-email with email:', formData.email);
           showToast({ message: msg, type: "warning" });
           setErrorMsg("Email not verified. Please verify your account first.");
-          // show a visible banner in the UI so WebView users can see the redirect is happening
           setRedirectNotice('Email not verified — redirecting to verification screen...');
-          // navigate to verification page where user can enter the 6-digit code
-          // use a short timeout to ensure toast/state updates don't block navigation in some WebViews
           setTimeout(() => {
             try {
-              // Prefer server-provided redirectUrl when available (more reliable in WebView/native shells)
-              const redirectUrl = err.response?.data?.redirectUrl;
-              // Prefer internal app navigation (SPA) so the verify page opens inside the app
-              try {
-                setRedirectNotice('Redirecting inside app to verification screen...');
-                navigate('/verify-email', { state: { email: formData.email } });
-                return;
-              } catch (navErr) {
-                console.warn('SPA navigation failed, will try external redirect', navErr);
-              }
-
-              // If SPA navigation wasn't possible (older WebView), fall back to server-provided full URL
-              if (redirectUrl) {
-                console.log('Falling back to server-provided redirectUrl:', redirectUrl);
-                setRedirectNotice(`Redirecting to: ${redirectUrl}`);
-                try {
-                  if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser && window.Capacitor.Plugins.Browser.open) {
-                    window.Capacitor.Plugins.Browser.open({ url: redirectUrl });
-                    return;
-                  }
-                } catch (e) { console.warn('Capacitor Browser open failed', e); }
-
-                try { window.location.href = redirectUrl; return; } catch (e) { console.warn('location.href assign failed', e); }
-                try { window.location.assign(redirectUrl); return; } catch (e) { console.warn('location.assign failed', e); }
-                try { window.open(redirectUrl, '_self'); return; } catch (e) { console.warn('window.open failed', e); }
-              }
+              navigate('/verify-email', { state: { email: formData.email } });
             } catch (navErr) {
               console.error('Navigation to /verify-email failed:', navErr);
-              // fallback: try server-provided redirectUrl or simple path
-              try {
-                const redirectUrl = err.response?.data?.redirectUrl || '/verify-email';
-                window.location.href = redirectUrl;
-              } catch (e) { /* ignore */ }
+              try { window.location.href = '/verify-email'; } catch (e) { /* ignore */ }
             }
           }, 50);
         } else if (err.response.status === 400) {
@@ -144,9 +122,11 @@ function Login() {
       <div className="flex justify-between items-center p-4">
         <div
           onClick={() => navigate("/")}
-          className="text-primary text-xl font-bold cursor-pointer"
+          className="flex items-center gap-2 cursor-pointer select-none"
+          style={{ fontFamily: "Poppins, Montserrat, Quicksand, Arial, sans-serif", fontWeight:700 }}
         >
-          KusinAI
+          <img src="/assets/KusinAILogo.png" alt="logo" className="h-10 w-10 object-contain" />
+          <span className="bg-gradient-to-r from-leaf/90 to-accent/90 bg-clip-text text-transparent text-xl tracking-wide">KusinAI</span>
         </div>
       </div>
 
@@ -155,7 +135,7 @@ function Login() {
           onSubmit={handleSubmit}
           className="bg-background/80 backdrop-blur-[2px] p-8 rounded-lg shadow-md w-full max-w-md space-y-4"
         >
-          <h1 className="text-2xl font-bold text-primary text-center">Login</h1>
+          <h1 className="text-2xl font-bold text-primary text-center mb-2">Login</h1>
 
           {errorMsg && (
             <div className="bg-accent/20 border border-accent text-accent px-4 py-2 rounded text-center mb-2 animate-pulse">
@@ -169,22 +149,20 @@ function Login() {
             </div>
           )}
 
-          <input
+          <Input
             name="email"
             type="email"
             placeholder="Email"
             onChange={handleChange}
-            className="w-full p-3 border border-leaf/40 rounded bg-background text-text focus:border-leaf"
             required
           />
 
           <div className="relative">
-            <input
+            <Input
               name="password"
               type={showPassword ? "text" : "password"}
               placeholder="Password"
               onChange={handleChange}
-              className="w-full p-3 border border-leaf/40 rounded pr-10 bg-background text-text focus:border-leaf"
               required
             />
             <button
@@ -208,12 +186,15 @@ function Login() {
             <span>Remember Me</span>
           </label>
 
-          <button
-            type="submit"
-            className="w-full bg-primary hover:bg-leaf text-white py-2 rounded font-semibold transition-colors"
-          >
-            Login
-          </button>
+          <Button type="submit" className="w-full">Login</Button>
+
+          <div className="flex justify-between text-sm"></div>
+
+          {isBanned && (
+            <div className="mt-2 text-center text-sm">
+              Need help? <a className="text-accent hover:underline" href="mailto:kusinai27@gmail.com?subject=Appeal%20Banned%20Account">Contact Support</a>
+            </div>
+          )}
 
           <p className="text-sm text-center">
             Don’t have an account?{" "}

@@ -10,12 +10,14 @@ import PageTransition from "../components/PageTransition";
 import MainLayout from "../components/MainLayout";
 import FloatingChatBot from "../components/FloatingChatBot";
 import axios from "axios";
+import LoadingOverlay from "../components/ui/loading";
+import { useToast } from "../context/ToastContext";
 
 const API_URL = import.meta.env.VITE_API_URL;
 import { jwtDecode } from "jwt-decode";
 
 const RecipeDetail = () => {
-  const { title } = useParams();
+  const { title, id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const fromQuery = location.state?.fromQuery || "";
@@ -23,6 +25,8 @@ const RecipeDetail = () => {
   const [recipe, setRecipe] = useState(null);
   const [comments, setComments] = useState([]);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const { showToast } = useToast();
   const [user, setUser] = useState(null);
 
   // comment/reply states
@@ -86,10 +90,13 @@ const RecipeDetail = () => {
     }
   };
 
+
   // Update recipe fetch into its own function to allow refresh/pull-to-refresh
   const fetchRecipe = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/recipes/title/${title}`);
+      const res = id
+        ? await axios.get(`${API_URL}/api/recipes/id/${id}`)
+        : await axios.get(`${API_URL}/api/recipes/title/${title}`);
       setRecipe(res.data);
       setLocalServings(res.data?.nutrition?.servings ?? null);
       fetchComments(res.data._id);
@@ -104,8 +111,12 @@ const RecipeDetail = () => {
       if (needsCalc) {
         window.requestIdleCallback ? window.requestIdleCallback(() => fetchNutrition(res.data._id)) : setTimeout(() => fetchNutrition(res.data._id), 50);
       }
+      // substitutions now static/manual; no auto-fetch
     } catch (err) {
       setError("Recipe not found.");
+      showToast({ message: "Recipe not found", type: "error" });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -165,7 +176,7 @@ const RecipeDetail = () => {
       window.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener("touchend", onTouchEnd);
     };
-  }, [title]);
+  }, [title, id]);
 
 
 
@@ -203,8 +214,10 @@ const RecipeDetail = () => {
       );
       setCommentText("");
       setComments(res.data);
+      showToast({ message: "Comment posted", type: "success" });
     } catch (err) {
       console.error("❌ Error posting comment:", err);
+      showToast({ message: "Failed to post comment", type: "error" });
     }
   };
 
@@ -219,8 +232,10 @@ const RecipeDetail = () => {
       );
       fetchComments(recipe._id);
       setReplyText((prev) => ({ ...prev, [commentId]: "" }));
+      showToast({ message: "Reply sent", type: "success" });
     } catch (err) {
       console.error("❌ Error sending reply:", err);
+      showToast({ message: "Failed to send reply", type: "error" });
     }
   };
 
@@ -233,8 +248,10 @@ const RecipeDetail = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       fetchComments(recipe._id);
+      // optional toast suppressed to avoid spam
     } catch (err) {
       console.error("❌ Error liking comment:", err);
+      showToast({ message: "Failed to like", type: "error" });
     }
   };
 
@@ -247,8 +264,10 @@ const RecipeDetail = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       fetchComments(recipe._id);
+      // suppressed toast
     } catch (err) {
       console.error("❌ Error liking reply:", err);
+      showToast({ message: "Failed to like reply", type: "error" });
     }
   };
 
@@ -263,8 +282,10 @@ const RecipeDetail = () => {
       setEditingCommentId(null);
       setEditingReply({});
       fetchComments(recipe._id);
+      showToast({ message: "Comment updated", type: "success" });
     } catch (err) {
       console.error("❌ Error editing comment:", err);
+      showToast({ message: "Failed to update comment", type: "error" });
     }
   };
 
@@ -316,8 +337,10 @@ const RecipeDetail = () => {
       setEditingReply((prev) => ({ ...prev, [replyId]: false }));
       setEditingCommentId(null);
       fetchComments(recipe._id);
+      showToast({ message: "Reply updated", type: "success" });
     } catch (err) {
       console.error("❌ Error editing reply:", err);
+      showToast({ message: "Failed to update reply", type: "error" });
     }
   };
 
@@ -352,6 +375,7 @@ const RecipeDetail = () => {
       image: recipe.image,
       ingredients: recipe.ingredients.join("\n"),
       steps: recipe.steps.join("\n"),
+      substitutions: (recipe.substitutions || []).join("\n"),
     });
     setEditRecipeModal(true);
   };
@@ -360,9 +384,12 @@ const RecipeDetail = () => {
     try {
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
       const updatedRecipe = {
-        ...editForm,
+        title: editForm.title,
+        region: editForm.region,
+        image: editForm.image,
         ingredients: editForm.ingredients.split("\n").map((i) => i.trim()).filter(Boolean),
         steps: editForm.steps.split("\n").map((s) => s.trim()).filter(Boolean),
+        substitutions: (editForm.substitutions || "").split("\n").map((s) => s.trim()).filter(Boolean),
       };
 
       await axios.put(`${API_URL}/api/recipes/${recipe._id}`, updatedRecipe, {
@@ -385,20 +412,35 @@ const RecipeDetail = () => {
       });
       setDeleteRecipeModal(false);
       navigate("/search"); // redirect after delete
+      showToast({ message: "Recipe deleted", type: "success" });
     } catch (err) {
       console.error("❌ Error deleting recipe:", err);
+      showToast({ message: "Failed to delete recipe", type: "error" });
     }
   };
 
   const formatTime = (timestamp) => new Date(timestamp).toLocaleString();
 
-  if (error) return <div>{error}</div>;
-  if (!recipe) return <div>Loading...</div>;
+  if (error) return (
+    <PageTransition>
+      <MainLayout>
+        <div className="max-w-3xl mx-auto bg-surface/90 backdrop-blur-sm rounded-lg p-6 mt-6 text-text">{error}</div>
+      </MainLayout>
+    </PageTransition>
+  );
+  if (!recipe) return (
+    <PageTransition>
+      <MainLayout>
+        <div className="max-w-3xl mx-auto bg-surface/90 backdrop-blur-sm rounded-lg p-6 mt-6 text-text">Loading...</div>
+        {loading && <LoadingOverlay text="Loading recipe..." />}
+      </MainLayout>
+    </PageTransition>
+  );
 
   return (
     <PageTransition>
       <MainLayout>
-        <div className="max-w-4xl mx-auto bg-surface/90 shadow-md rounded-lg p-6 space-y-6 relative mt-6 text-text">
+        <div className="max-w-4xl mx-auto bg-surface/90 backdrop-blur-sm shadow-md rounded-lg p-6 space-y-6 relative mt-6 text-text px-3 sm:px-6">
           <Link
             to={`/search?query=${encodeURIComponent(fromQuery)}`}
             className="absolute top-4 left-4 text-leaf hover:text-accent"
@@ -506,9 +548,9 @@ const RecipeDetail = () => {
           {recipe.substitutions && recipe.substitutions.length > 0 && (
             <div className="mt-6">
               <h2 className="text-xl font-semibold text-leaf">Substitutions</h2>
-              <ul className="list-disc ml-6">
+              <ul className="list-disc ml-6 pr-2">
                 {recipe.substitutions.map((sub, idx) => (
-                  <li key={idx}>{sub}</li>
+                  <li key={idx} className="break-words">{sub}</li>
                 ))}
               </ul>
             </div>
@@ -803,6 +845,13 @@ const RecipeDetail = () => {
                 rows="5"
                 placeholder="Steps (one per line)"
               />
+              <textarea
+                value={editForm.substitutions}
+                onChange={(e) => setEditForm({ ...editForm, substitutions: e.target.value })}
+                className="w-full p-2 border rounded mb-2"
+                rows="4"
+                placeholder="Substitutions (one per line)"
+              />
               <div className="flex justify-end gap-2">
                 <button
                   onClick={saveRecipeChanges}
@@ -871,6 +920,7 @@ const RecipeDetail = () => {
 
         {/* Chatbot */}
         <FloatingChatBot recipe={recipe} />
+        {loading && <LoadingOverlay text="Loading..." />}
       </MainLayout>
     </PageTransition>
   );

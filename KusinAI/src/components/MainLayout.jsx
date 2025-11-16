@@ -7,18 +7,22 @@
   Notes: Keep presentational; business logic belongs in contexts/services.
 */
 import IngredientScanner from "./IngredientScanner";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { FiMenu, FiX, FiCamera, FiUser, FiSearch } from "react-icons/fi";
 import LogoutButton from "./LogoutButton";
 import { isLoggedIn } from "../utils/auth";
 import { jwtDecode } from "jwt-decode";
+import { App as CapApp } from "@capacitor/app"; // Hardware back button handling
 
 const MainLayout = ({ children }) => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [showSearchHint, setShowSearchHint] = useState(false);
+  const searchHintTimeoutRef = useRef(null);
   const [addedIngredient, setAddedIngredient] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
   const navigate = useNavigate();
 
   // ✅ Decode user role
@@ -32,6 +36,50 @@ const MainLayout = ({ children }) => {
   } catch {
     role = null;
   }
+
+  // Handle Android hardware back button: close overlays first, then navigate or exit
+  useEffect(() => {
+    let remove;
+    CapApp.addListener("backButton", ({ canGoBack }) => {
+      if (scannerOpen) { setScannerOpen(false); return; }
+      if (isSidebarOpen) { setSidebarOpen(false); return; }
+      if (canGoBack && window.history.length > 1) window.history.back();
+      else CapApp.exitApp();
+    }).then((handle) => {
+      remove = handle && handle.remove ? handle.remove : undefined;
+    }).catch(() => { /* ignore on web */ });
+    return () => { if (typeof remove === 'function') remove(); };
+  }, [scannerOpen, isSidebarOpen]);
+
+  // Pull-to-refresh at top of scroll region (mobile gesture)
+  useEffect(() => {
+    const el = document.getElementById('main-scroll-region');
+    if (!el) return;
+    let startY = 0;
+    let triggered = false;
+    const onTouchStart = (e) => {
+      if (el.scrollTop === 0) {
+        startY = e.touches[0].clientY;
+        triggered = false;
+      }
+    };
+    const onTouchMove = (e) => {
+      if (el.scrollTop === 0) {
+        const diff = e.touches[0].clientY - startY;
+        if (!triggered && diff > 90) { // threshold
+          triggered = true;
+          setRefreshing(true);
+          setTimeout(() => window.location.reload(), 450);
+        }
+      }
+    };
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchmove', onTouchMove, { passive: true });
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove', onTouchMove);
+    };
+  }, []);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -86,9 +134,9 @@ const MainLayout = ({ children }) => {
       <div className="flex flex-col flex-grow w-full relative z-10">
         {/* Sidebar */}
         <div
-          className={`fixed top-0 right-0 h-full bg-tamarind text-white transform transition-transform duration-300 ease-in-out z-40 ${
+          className={`fixed top-0 right-0 h-full bg-primary opacity-97 text-white transform transition-transform duration-300 ease-in-out z-40 ${
             isSidebarOpen ? "translate-x-0" : "translate-x-full"
-          } w-64`}
+          } w-64 shadow-xl`}
         >
           <div className="flex items-center justify-between p-4 border-b border-leaf">
             <span className="text-xl font-bold text-accent">KusinAI</span>
@@ -106,7 +154,7 @@ const MainLayout = ({ children }) => {
                 <Link
                   to={item === "Home" ? "/" : `/${item.toLowerCase()}`}
                   onClick={() => setSidebarOpen(false)}
-                  className="block px-4 py-2 hover:bg-leaf/30 rounded transition-colors"
+                  className="block px-4 py-2 rounded transition-colors bg-primary/10 hover:bg-accent/30"
                 >
                   {item}
                 </Link>
@@ -114,11 +162,18 @@ const MainLayout = ({ children }) => {
             ))}
           </ul>
         </div>
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 z-30"
+            onClick={() => setSidebarOpen(false)}
+            aria-hidden="true"
+          />
+        )}
 
         {/* Header / Topbar */}
         <header className="relative px-3 py-2 shadow-md flex items-center justify-between gap-2 md:px-6 md:py-3 min-h-[56px] bg-surface/90">
           <div className="absolute inset-0 bg-primary" style={{ opacity: 0.7, zIndex: 1 }} />
-          <div className="relative w-full h-14 flex items-center justify-between gap-2" style={{ zIndex: 2 }}>
+          <div className="relative w-full h-10 flex items-center justify-between gap-2" style={{ zIndex: 2 }}>
             {/* Logo */}
             <Link
               to="/"
@@ -137,13 +192,13 @@ const MainLayout = ({ children }) => {
                 className="h-full w-auto object-contain"
                 style={{ marginRight: "0.5rem" }}
               />
-              <span className="select-none bg-gradient-to-r from-leaf to-accent bg-clip-text text-transparent tracking-wide leading-none drop-shadow-sm">KusinAI</span>
+              <span className="select-none bg-gradient-to-r from-leaf/90 to-accent/90 bg-clip-text text-transparent tracking-wide leading-none drop-shadow-sm text-sm sm:text-base md:text-lg">KusinAI</span>
             </Link>
 
             {/* Search Bar */}
             <form
               onSubmit={handleSearchSubmit}
-              className="flex items-center bg-background rounded-full flex-shrink min-w-0 w-[160px] sm:w-[260px] md:w-[280px] lg:w-[340px] mx-2 transition-all duration-200 border border-leaf shadow-sm"
+              className="flex items-center bg-background rounded-full flex-shrink min-w-0 w-[140px] sm:w-[240px] md:w-[280px] lg:w-[340px] mx-2 transition-all duration-200 border border-leaf shadow-sm"
             >
               <button
                 type="submit"
@@ -155,6 +210,15 @@ const MainLayout = ({ children }) => {
               <input
                 type="text"
                 value={searchInput}
+                onFocus={() => {
+                  setShowSearchHint(true);
+                  clearTimeout(searchHintTimeoutRef.current);
+                  searchHintTimeoutRef.current = setTimeout(() => setShowSearchHint(false), 5000);
+                }}
+                onBlur={() => {
+                  // allow short delay for possible click on close button
+                  setTimeout(() => setShowSearchHint(false), 400);
+                }}
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder="Insert Ingredient/s..."
                 className="px-3 py-1 text-text w-full focus:outline-none text-sm sm:text-base min-w-0 bg-transparent placeholder-leaf"
@@ -191,7 +255,7 @@ const MainLayout = ({ children }) => {
         </header>
 
         {/* Main Content */}
-        <main className="flex-grow bg-background bg-opacity-90 overflow-y-auto">
+        <main className="flex-grow bg-surface/80 backdrop-blur-sm overflow-y-auto overflow-x-hidden pb-24" id="main-scroll-region">
           {children}
         </main>
 
@@ -210,11 +274,40 @@ const MainLayout = ({ children }) => {
             </div>
           </div>
         )}
+        {/* Search Hint Balloon */}
+        {showSearchHint && (
+          <div className="pointer-events-none select-none" aria-hidden="true">
+            <div
+              className="fixed" style={{
+                // approximate position near search bar (top header height ~56px)
+                top: '70px',
+                right: '110px',
+                zIndex: 60
+              }}
+            >
+              <div className="relative bg-white border border-leaf/40 shadow-lg rounded-xl px-4 py-3 text-sm w-64 animate-fade-in">
+                <button
+                  onClick={() => { setShowSearchHint(false); clearTimeout(searchHintTimeoutRef.current); }}
+                  className="absolute top-1 right-1 w-6 h-6 flex items-center justify-center rounded-full bg-surface text-leaf hover:bg-leaf hover:text-white pointer-events-auto"
+                  aria-label="Close hint"
+                >×</button>
+                <p className="text-text leading-snug mb-1">Enter only ingredients separated by commas.</p>
+                <p className="text-leaf text-xs italic">Example: chicken, garlic, soy sauce</p>
+                <div className="absolute -top-2 right-8 w-4 h-4 rotate-45 bg-white border border-leaf/40" />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ✅ Success Banner */}
         {addedIngredient && (
           <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-6 py-2 rounded-full shadow-lg text-sm animate-fade-in-out z-50">
             ✅ Added ingredient: <span className="font-semibold capitalize">{addedIngredient}</span>
+          </div>
+        )}
+        {refreshing && (
+          <div className="fixed top-5 left-1/2 -translate-x-1/2 bg-accent text-white px-4 py-2 rounded-full shadow z-50 animate-pulse">
+            Refreshing...
           </div>
         )}
       </div>

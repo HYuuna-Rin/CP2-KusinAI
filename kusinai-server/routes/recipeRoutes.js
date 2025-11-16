@@ -89,14 +89,35 @@ router.get("/id/:id", async (req, res) => {
 router.get("/title/:title", async (req, res) => {
   try {
     const decodedTitle = decodeURIComponent(req.params.title);
-    const recipe = await Recipe.findOne({
+    // Primary exact (case-insensitive) match
+    let recipe = await Recipe.findOne({
       title: { $regex: `^${decodedTitle}$`, $options: "i" },
     });
+    if (!recipe) {
+      // Fallback: normalize punctuation/spaces and try again
+      const normalize = (str) =>
+        str
+          .toLowerCase()
+          .replace(/[^a-z0-9\s]/gi, "")
+          .replace(/\s+/g, " ")
+          .trim();
+      const target = normalize(decodedTitle);
+      const all = await Recipe.find({}, "title");
+      const candidate = all.find((r) => r.title && normalize(r.title) === target);
+      if (candidate) {
+        recipe = await Recipe.findById(candidate._id);
+      } else {
+        // Final fallback: case-insensitive contains match (escaped)
+        const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        recipe = await Recipe.findOne({ title: { $regex: esc(decodedTitle), $options: "i" } });
+      }
+    }
     if (!recipe) {
       return res.status(404).json({ message: "Recipe not found" });
     }
     res.json(recipe);
   } catch (err) {
+    console.error("❌ Error in title lookup:", err);
     res.status(500).json({ message: "Server error" });
   }
 });

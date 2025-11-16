@@ -14,10 +14,29 @@ const router = express.Router();
 
 // Words too generic to count as ingredients
 const IGNORE_WORDS = new Set([
-  "dish","food","cuisine","meal","ingredient","recipe","produce",
-  "fruit","vegetable","pack","package","bowl","plate","utensil",
-  "spoon","fork","knife","table","container","pan","tray","tableware",
-  "cutlery","serveware","dining","tablecloth","pot","cooking utensil"
+  // Generic
+  "dish","food","cuisine","meal","ingredient","ingredients","recipe","produce","product",
+  "fruit","vegetable","fruits","vegetables","spice","spices","seasoning","herb","herbs",
+  // Packaging / tableware
+  "pack","package","bowl","plate","utensil","spoon","fork","knife","table","container","pan","tray","tableware","cutlery","serveware","dining","tablecloth","pot","cooking utensil","bottle","jar","can","box","bag","cup","cups",
+  // Scene/objects
+  "board","cutting board","kitchen","counter","stove","oven","microwave","sink","background","watermark","logo","label","barcode","brand",
+  // Nutrition/marketing
+  "calorie","calories","nutrition","nutritional","cholesterol","fat","sodium","carb","carbs","protein","vitamin","minerals","organic","natural","fresh","quality","premium","net wt","serving","servings",
+  // Conjunctions/stopwords
+  "and","with","the","of","for","in","on","by",
+  // Measurements/common OCR noise
+  "ml","l","liter","liters","kg","g","gram","grams","ounce","ounces","oz","lb","lbs","teaspoon","teaspoons","tsp","tablespoon","tablespoons","tbsp","cup","cups","qt","pt",
+  // Humans / people
+  "person","people","man","woman","chef","cook","hand","hands","finger","fingers","skin",
+  // Clothing / apparel
+  "shirt","clothes","clothing","fabric","apron","dress","jeans","pant","pants","shoe","shoes","jacket","cap","hat",
+  // Electronics / appliances / devices
+  "phone","camera","laptop","computer","monitor","television","tv","screen","device","appliance","refrigerator","fridge","freezer","blender","mixer","processor","machine","microwave","aircon","air conditioner","fan","speaker","light","lights","bulb",
+  // Broad non-specific natural terms
+  "natural","organic","fresh","quality","premium","nature","environment","leaf","leaves","tree","trees","plant","plants","flower","flowers",
+  // Service / branding / misc
+  "logo","brand","copyright","trademark","design","background",
 ]);
 
 // Simple singularize helper

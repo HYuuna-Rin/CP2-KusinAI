@@ -3,6 +3,8 @@
   Purpose: User registration/sign-up page.
 */
 import React, { useState } from "react";
+import Input from "../components/ui/input";
+import Button from "../components/ui/button";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -81,42 +83,39 @@ function Register() {
         />
       </div>
       <div className="flex justify-between items-center p-4">
-        <div onClick={() => navigate("/")} className="text-primary text-xl font-bold cursor-pointer">
-          🍳 KusinAI
+        <div onClick={() => navigate("/")} className="flex items-center gap-2 cursor-pointer select-none" style={{ fontFamily: "Poppins, Montserrat, Quicksand, Arial, sans-serif", fontWeight:700 }}>
+          <img src="/assets/KusinAILogo.png" alt="logo" className="h-10 w-10 object-contain" />
+          <span className="bg-gradient-to-r from-leaf/90 to-accent/90 bg-clip-text text-transparent text-xl tracking-wide">KusinAI</span>
         </div>
       </div>
       <div className="flex-grow flex justify-center items-center relative z-10">
         <form onSubmit={handleSubmit} className="bg-background/80 backdrop-blur-[2px] p-8 rounded-lg shadow-md w-full max-w-md space-y-4">
-          <h1 className="text-2xl font-bold text-primary text-center">Register</h1>
-          <input
+          <h1 className="text-2xl font-bold text-primary text-center mb-2">Register</h1>
+          <Input
             name="name"
             type="text"
             placeholder="Name"
             onChange={handleChange}
-            className="w-full p-3 border border-leaf/40 rounded bg-background text-text focus:border-leaf"
             required
           />
-          <input
+          <Input
             name="email"
             type="email"
             placeholder="Email"
             onChange={handleChange}
-            className="w-full p-3 border border-leaf/40 rounded bg-background text-text focus:border-leaf"
             required
           />
           <div className="relative">
-            <input
+            <Input
               name="password"
               type={showPassword ? "text" : "password"}
               placeholder="Password"
               onChange={handleChange}
-              className="w-full p-3 border border-leaf/40 rounded pr-10 bg-background text-text focus:border-leaf"
               required
             />
-            {passwordError && <div className="text-sm text-red-500 mt-1">{passwordError}</div>}
             <button
               type="button"
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-leaf"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-leaf"
               onClick={() => setShowPassword((prev) => !prev)}
               tabIndex={-1}
               aria-label={showPassword ? "Hide password" : "Show password"}
@@ -124,14 +123,14 @@ function Register() {
               {showPassword ? <FiEyeOff /> : <FiEye />}
             </button>
           </div>
+          {passwordError && <div className="text-sm text-red-500 -mt-1 mb-2">{passwordError}</div>}
           <div className="relative">
-            <input
+            <Input
               name="confirmPassword"
               type={showConfirmPassword ? "text" : "password"}
               placeholder="Confirm Password"
               value={confirmPassword}
               onChange={e => setConfirmPassword(e.target.value)}
-              className="w-full p-3 border border-leaf/40 rounded pr-10 mt-2 bg-background text-text focus:border-leaf"
               required
             />
             <button
@@ -144,9 +143,7 @@ function Register() {
               {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
             </button>
           </div>
-          <button type="submit" className="w-full bg-primary hover:bg-leaf text-white py-2 rounded font-semibold transition-colors">
-            Register
-          </button>
+          <Button type="submit" className="w-full">Register</Button>
           <p className="text-sm text-center">
             Already have an account? <a href="/login" className="text-accent font-medium hover:underline">Login</a>
           </p>

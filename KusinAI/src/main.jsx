@@ -14,7 +14,6 @@ import { ToastProvider } from './context/ToastContext';
 import { AuthProvider } from './context/AuthContext';
 import { setupIonicReact, IonApp } from '@ionic/react';
 import { BrowserRouter } from 'react-router-dom';
-import DeepLinkHandler from './DeepLinkHandler.jsx'; // ✅ add this import
 
 import '@ionic/react/css/core.css';
 import '@ionic/react/css/normalize.css';
@@ -35,7 +34,6 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <BrowserRouter>
         <AuthProvider>
           <ToastProvider>
-            <DeepLinkHandler /> {/* ✅ Add listener */}
             <App />
           </ToastProvider>
         </AuthProvider>
