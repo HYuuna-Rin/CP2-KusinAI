@@ -180,27 +180,9 @@ router.post("/register", async (req, res) => {
         .json({ message: "Email domain is not valid or cannot receive mail." });
     }
 
-    // MailboxLayer API verification (optional)
-    try {
-      const verifyRes = await fetch(
-        `https://apilayer.net/api/check?access_key=${process.env.MAILBOXLAYER_KEY}&email=${email}`
-      );
-      const verifyData = await verifyRes.json();
-      if (
-        !verifyData.format_valid ||
-        !verifyData.mx_found ||
-        !verifyData.smtp_check
-      ) {
-        return res
-          .status(400)
-          .json({ message: "Please use a valid and existing email address." });
-      }
-    } catch (err) {
-      console.error("📧 MailboxLayer API error:", err);
-      return res
-        .status(500)
-        .json({ message: "Failed to verify email address." });
-    }
+    // Basic email validation
+if (!validator.isEmail(email))
+  return res.status(400).json({ message: "Invalid email format" });
 
     // Check duplicate user
     const existingUser = await User.findOne({ email });
