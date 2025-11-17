@@ -7,6 +7,7 @@ import { useParams, useLocation, Link, useNavigate } from "react-router-dom";
 import { FiArrowLeft, FiEdit, FiTrash2 } from "react-icons/fi";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import PageTransition from "../components/PageTransition";
+import ModalPortal from "../components/ModalPortal";
 import MainLayout from "../components/MainLayout";
 import FloatingChatBot from "../components/FloatingChatBot";
 import axios from "axios";
@@ -807,8 +808,10 @@ const RecipeDetail = () => {
 
         {/* RECIPE EDIT MODAL */}
         {editRecipeModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg w-full max-w-lg">
+          <ModalPortal>
+            <div className="fixed inset-0 z-[2000] pointer-events-auto">
+              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setEditRecipeModal(false)} />
+              <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg w-full max-w-lg shadow-xl">
               <h2 className="text-lg font-bold mb-4">Edit Recipe</h2>
               <input
                 type="text"
@@ -866,14 +869,17 @@ const RecipeDetail = () => {
                   Cancel
                 </button>
               </div>
+              </div>
             </div>
-          </div>
+          </ModalPortal>
         )}
 
         {/* RECIPE DELETE CONFIRM MODAL */}
         {deleteRecipeModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-md text-center w-80">
+          <ModalPortal>
+            <div className="fixed inset-0 z-[2000] pointer-events-auto">
+              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setDeleteRecipeModal(false)} />
+              <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-md text-center w-80">
               <h2 className="text-lg font-bold mb-4">Delete Recipe</h2>
               <p>Are you sure you want to delete this recipe? This action cannot be undone.</p>
               <div className="mt-4 flex justify-center gap-4">
@@ -890,14 +896,17 @@ const RecipeDetail = () => {
                   Cancel
                 </button>
               </div>
+              </div>
             </div>
-          </div>
+          </ModalPortal>
         )}
 
         {/* COMMENT DELETE CONFIRM MODAL (same as before) */}
         {modalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-md text-center w-80">
+          <ModalPortal>
+            <div className="fixed inset-0 z-[2000] pointer-events-auto">
+              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setModalOpen(false)} />
+              <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-md text-center w-80">
               <h2 className="text-lg font-bold mb-4">Confirm Deletion</h2>
               <p>Are you sure you want to delete this {deleteTarget.type}?</p>
               <div className="mt-4 flex justify-center gap-4">
@@ -914,8 +923,9 @@ const RecipeDetail = () => {
                   Cancel
                 </button>
               </div>
+              </div>
             </div>
-          </div>
+          </ModalPortal>
         )}
 
         {/* Chatbot */}

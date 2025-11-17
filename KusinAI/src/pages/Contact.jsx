@@ -67,7 +67,7 @@ function Contact() {
             <h2 className="text-xl font-semibold mt-6 mb-3 text-leaf">Meet the Team</h2>
             <div className="flex flex-wrap gap-6 justify-center mb-2">
               <div className="bg-background/80 rounded-lg p-4 w-48 flex flex-col items-center">
-                <img src="/team2.jpg" alt="Team Member" className="w-20 h-20 rounded-full mb-2 object-cover border-2 border-accent" />
+                <img src="assets/Ramos.jpg" alt="Team Member" className="w-20 h-20 rounded-full mb-2 object-cover border-2 border-accent" />
                 <div className="font-semibold text-text">Catherine T. Ramos</div>
                 <div className="text-xs text-leaf">Project Lead</div>
                 <div className="text-xs mt-2 text-tamarind"><a href="mailto:ramoscath12@gmail.com" className="underline text-primary">ramoscath12@gmail.com</a></div>

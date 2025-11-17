@@ -8,6 +8,7 @@ import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL;
 import MainLayout from "../components/MainLayout";
+import ModalPortal from "../components/ModalPortal";
 import PageTransition from "../components/PageTransition";
 import { FiTrash2, FiEdit, FiPlus } from "react-icons/fi";
 
@@ -206,8 +207,10 @@ const AdminDashboard = () => {
 
         {/* ADD RECIPE MODAL */}
         {addModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-lg">
+          <ModalPortal>
+            <div className="fixed inset-0 z-[2000] pointer-events-auto">
+              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setAddModal(false)} />
+              <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-md w-full max-w-lg">
               <h2 className="text-lg font-bold mb-4">Add New Recipe</h2>
               <input
                 type="text"
@@ -258,14 +261,17 @@ const AdminDashboard = () => {
                   Cancel
                 </button>
               </div>
+              </div>
             </div>
-          </div>
+          </ModalPortal>
         )}
 
         {/* DELETE CONFIRMATION MODAL */}
         {deleteModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-md text-center w-80">
+          <ModalPortal>
+            <div className="fixed inset-0 z-[2000] pointer-events-auto">
+              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setDeleteModal(false)} />
+              <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-md text-center w-80">
               <h2 className="text-lg font-bold mb-4">Delete Recipe</h2>
               <p>Are you sure you want to delete this recipe?</p>
               <div className="mt-4 flex justify-center gap-4">
@@ -282,8 +288,9 @@ const AdminDashboard = () => {
                   Cancel
                 </button>
               </div>
+              </div>
             </div>
-          </div>
+          </ModalPortal>
         )}
       </MainLayout>
     </PageTransition>
