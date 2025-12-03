@@ -19,8 +19,15 @@ const ProtectedRoute = ({ children, role }) => {
 
   const decoded = jwtDecode(token);
 
+  // Block admin accounts entirely in the user app
+  if (decoded?.role === "admin") {
+    localStorage.removeItem("token");
+    sessionStorage.removeItem("token");
+    return <Navigate to="/login" />;
+  }
+
   if (role && decoded.role !== role) {
-    return <Navigate to="/" />; // bounce non-admins
+    return <Navigate to="/" />; // bounce non-matching roles
   }
 
   return children;

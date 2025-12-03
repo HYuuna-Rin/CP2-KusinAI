@@ -27,8 +27,14 @@ function Login() {
     if (token) {
       try {
         const decoded = jwtDecode(token);
-        if (decoded.role === "admin") navigate("/admin/dashboard");
-        else navigate("/");
+        if (decoded.role === "admin") {
+          // Clear any incorrectly persisted admin token in user app
+          localStorage.removeItem("token");
+          sessionStorage.removeItem("token");
+          setErrorMsg("Admin accounts are not allowed in the user app.");
+          return; // stay on login
+        }
+        navigate("/");
       } catch {
         navigate("/");
       }
@@ -54,14 +60,26 @@ function Login() {
       if (res.data.token) {
         const { token } = res.data;
 
+        // Decode to check role before storing
+        let decoded = null;
+        try { decoded = jwtDecode(token); } catch {}
+
+        // Block admin accounts in the user interface
+        if (decoded && decoded.role === "admin") {
+          // Ensure no token is persisted
+          localStorage.removeItem("token");
+          sessionStorage.removeItem("token");
+          showToast({ message: "Admin accounts are blocked here. Please use the Admin site.", type: "error" });
+          setErrorMsg("Admin accounts are not allowed in the user app.");
+          return; // stop login flow
+        }
+
+        // Store token for regular users
         if (rememberMe) localStorage.setItem("token", token);
         else sessionStorage.setItem("token", token);
 
-  const decoded = jwtDecode(token);
-  showToast({ message: "Login successful!", type: "success" });
-
-  if (decoded.role === "admin") navigate("/admin/dashboard");
-  else navigate("/");
+        showToast({ message: "Login successful!", type: "success" });
+        navigate("/");
       } else {
         setErrorMsg(res.data.message || "Login failed");
       }
