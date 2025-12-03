@@ -1,3 +1,14 @@
+/**
+ * File: src/components/ui/card.jsx
+ * Purpose: Small layout primitives for grouping related content (Card + subcomponents).
+ * Responsibilities:
+ *   - Provide a styled container with surface background, border, and padding.
+ *   - Expose header, title, and content wrappers for semantic composition.
+ * Notes:
+ *   - Presentational only; no state or external side effects.
+ *   - Style tokens reflect brand palette (surface/text).
+ *   - Unaffected by portal usage or Spoonacular removal.
+ */
 import * as React from "react";
 import { cn } from "../../lib/utils";
 

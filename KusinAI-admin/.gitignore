@@ -1,0 +1,31 @@
+# Node/Vite build artifacts
+node_modules/
+dist/
+
+# Local environment files
+.env
+.env.local
+.env.development
+.env.production
+
+# Logs and debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+*.swp
+.eslintcache
+
+# Coverage / test outputs
+coverage/
+
+# Vercel local metadata (keep vercel.json, ignore .vercel folder)
+.vercel/
+
+# Misc caches
+.cache/
+.tmp/

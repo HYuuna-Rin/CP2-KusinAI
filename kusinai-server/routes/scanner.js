@@ -1,237 +1,213 @@
-/*
-  File: routes/scanner.js
-  Purpose: Ingredient scanner endpoints (e.g., OCR/vision pipeline inputs/outputs).
-  Responsibilities:
-  - Receive client scans, parse ingredients, and normalize data.
-  - Delegate to scanning/recognition services; return clean ingredient lists.
-  Notes: Validate payloads; consider size limits and security scanning.
-*/
-// routes/scanner.js
+// /routes/scanner.js
+
 import express from "express";
-import fetch from "node-fetch";
+import axios from "axios";
 
 const router = express.Router();
 
-// Words too generic to count as ingredients
-const IGNORE_WORDS = new Set([
-  // Generic
-  "dish","food","cuisine","meal","ingredient","ingredients","recipe","produce","product",
-  "fruit","vegetable","fruits","vegetables","spice","spices","seasoning","herb","herbs",
-  // Packaging / tableware
-  "pack","package","bowl","plate","utensil","spoon","fork","knife","table","container","pan","tray","tableware","cutlery","serveware","dining","tablecloth","pot","cooking utensil","bottle","jar","can","box","bag","cup","cups",
-  // Scene/objects
-  "board","cutting board","kitchen","counter","stove","oven","microwave","sink","background","watermark","logo","label","barcode","brand",
-  // Nutrition/marketing
-  "calorie","calories","nutrition","nutritional","cholesterol","fat","sodium","carb","carbs","protein","vitamin","minerals","organic","natural","fresh","quality","premium","net wt","serving","servings",
-  // Conjunctions/stopwords
-  "and","with","the","of","for","in","on","by",
-  // Measurements/common OCR noise
-  "ml","l","liter","liters","kg","g","gram","grams","ounce","ounces","oz","lb","lbs","teaspoon","teaspoons","tsp","tablespoon","tablespoons","tbsp","cup","cups","qt","pt",
-  // Humans / people
-  "person","people","man","woman","chef","cook","hand","hands","finger","fingers","skin",
-  // Clothing / apparel
-  "shirt","clothes","clothing","fabric","apron","dress","jeans","pant","pants","shoe","shoes","jacket","cap","hat",
-  // Electronics / appliances / devices
-  "phone","camera","laptop","computer","monitor","television","tv","screen","device","appliance","refrigerator","fridge","freezer","blender","mixer","processor","machine","microwave","aircon","air conditioner","fan","speaker","light","lights","bulb",
-  // Broad non-specific natural terms
-  "natural","organic","fresh","quality","premium","nature","environment","leaf","leaves","tree","trees","plant","plants","flower","flowers",
-  // Service / branding / misc
-  "logo","brand","copyright","trademark","design","background",
+/**
+ * Ingredient filtering
+ * This removes garbage predictions like "food", "meal", "produce", etc.
+ */
+const INGREDIENT_WHITELIST = new Set([
+  // Core staples
+  "garlic","onion","tomato","ginger","egg","oil","olive oil","soy sauce","salt","pepper","butter","milk","flour","sugar","chicken","beef","pork","fish","rice","shrimp","squid","crab","carrot","potato","cabbage","bell pepper","okra","spinach","lettuce","lemon","lime","coconut",
+  // Expanded vegetables & aromatics
+  "eggplant","aubergine","broccoli","cauliflower","green beans","string beans","bean sprout","mung bean","mung beans","chili","chili pepper","red chili","green chili","turmeric","lemongrass","bay leaf","basil","parsley","cilantro","coriander","mint","spring onion","scallion","shallot","ginger root",
+  // Filipino / regional ingredients
+  "ampalaya","bitter melon","bitter gourd","malunggay","moringa","sitaw","calamansi","tofu","taho","longganisa","papaya","plantain","banana",
+  // Pantry items / sauces
+  "fish sauce","vinegar","rice vinegar","coconut milk","coconut cream","brown sugar"
 ]);
 
-// Simple singularize helper
-const singularize = (word) => {
-  if (!word) return word;
-  if (word.endsWith("ies")) return word.slice(0, -3) + "y";
-  if (word.endsWith("ses")) return word.slice(0, -2);
-  if (word.endsWith("s") && word.length > 3) return word.slice(0, -1);
-  return word;
-};
-
-// Normalize tokens
-const normalize = (str) =>
-  (str || "")
-    .toLowerCase()
-    .replace(/[\.,;:\/()\[\]"'`]/g, "")
-    .trim();
+const BLOCKLIST = new Set([
+  // Generic / non-ingredient concepts
+  "meal","recipe","dish","food","produce","ingredient","cuisine","vegetable","fruit","natural foods","tableware","kitchen","utensil","cookware","plate","bowl","spoon","fork","knife","cutting board","board","wood","background","close up","label","logo","brand","packaging","container","glass","cup","table","surface","photography","nutrition","macro","raw"
+]);
 
 router.post("/scan", async (req, res) => {
+  console.log("📸 Using Clarifai Ingredient Scanner (with Vision fallback)");
+
   try {
-    const { imageBase64 } = req.body;
-    if (!imageBase64)
+    const { image, imageBase64, imageUrl } = req.body || {};
+
+    const base64raw = (image || imageBase64 || "")
+      .replace(/^data:image\/[a-zA-Z+]+;base64,/, "");
+
+    if (!base64raw && !imageUrl) {
       return res.status(400).json({ error: "Image is required" });
-
-    const response = await fetch(
-      `https://vision.googleapis.com/v1/images:annotate?key=${process.env.GOOGLE_VISION_API_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          requests: [
-            {
-              image: { content: imageBase64 },
-              features: [
-                { type: "LABEL_DETECTION", maxResults: 30 },
-                { type: "OBJECT_LOCALIZATION", maxResults: 30 },
-                { type: "TEXT_DETECTION", maxResults: 10 },
-                { type: "WEB_DETECTION", maxResults: 15 },
-              ],
-            },
-          ],
-        }),
-      }
-    );
-
-    const data = await response.json();
-    const resp = data.responses?.[0] || {};
-
-    // Labels (scene/context)
-    const labels = (resp.labelAnnotations || []).map((l) => ({
-      name: singularize(normalize(l.description)),
-      score: l.score || 0,
-      source: "label",
-    }));
-
-    // Objects (localized ingredients)
-    const objects = (resp.localizedObjectAnnotations || []).map((o) => ({
-      name: singularize(normalize(o.name)),
-      score: (o.score || 0) * 1.3, // boost importance
-      boundingPoly: o.boundingPoly || null,
-      source: "object",
-    }));
-
-    // OCR text tokens
-    const texts = [];
-    if (resp.textAnnotations && resp.textAnnotations.length > 0) {
-      const whole = resp.textAnnotations[0].description || "";
-      whole.split(/\s+/).forEach((t) => {
-        const n = normalize(t);
-        if (n)
-          texts.push({ name: singularize(n), score: 0.3, source: "text" });
-      });
     }
 
-    // Web hints
-    const webLabels = (resp.webDetection?.bestGuessLabels || []).map((w) => ({
-      name: singularize(normalize(w.label)),
-      score: 0.6,
-      source: "webBestGuess",
-    }));
+    const CLARIFAI_PAT = process.env.CLARIFAI_PAT;
+    const GKEY = process.env.GOOGLE_VISION_API_KEY;
 
-    const webEntities = (resp.webDetection?.webEntities || []).map((e) => ({
-      name: singularize(normalize(e.description || "")),
-      score: e.score || 0.5,
-      source: "webEntity",
-    }));
+    if (!CLARIFAI_PAT) {
+      return res.status(500).json({ error: "Missing Clarifai PAT" });
+    }
 
-    const all = [...objects, ...labels, ...texts, ...webLabels, ...webEntities];
-
-    // Synonyms / aliases for ingredient recall
-    const ALIASES = {
-      pomelo: ["pummelo", "shaddock", "pomello"],
-      eggplant: ["aubergine"],
-      zucchini: ["courgette"],
-      cilantro: ["coriander"],
-      scallion: ["spring onion", "green onion"],
-      chickpea: ["garbanzo"],
+    // ----------------------------------------------------
+    // ⭐ Clarifai FOOD MODEL CALL
+    // Using Clarifai's hosted public app: user_id="clarifai", app_id="main"
+    // ----------------------------------------------------
+    const clarifaiReq = {
+      user_app_id: { user_id: "clarifai", app_id: "main" },
+      inputs: [
+        {
+          data: {
+            image: base64raw
+              ? { base64: base64raw }
+              : { url: imageUrl }
+          }
+        }
+      ]
     };
 
-    const normalizedToCanonical = {};
-    Object.keys(ALIASES).forEach((canon) => {
-      normalizedToCanonical[canon] = canon;
-      ALIASES[canon].forEach((alt) => (normalizedToCanonical[alt] = canon));
-    });
+    let clarifaiCandidates = [];
 
-    const extra = [];
-    for (const c of all) {
-      const name = c.name;
-      if (!name) continue;
-      const canon = normalizedToCanonical[name];
-      if (canon) {
-        const syns = [canon].concat(ALIASES[canon] || []);
-        for (const s of syns) {
-          if (s === name) continue;
-          extra.push({
-            name: s,
-            score: (c.score || 0) * 0.7,
-            source: "alias",
-            boundingPoly: c.boundingPoly || null,
+    try {
+      const clarifaiRes = await axios.post(
+        "https://api.clarifai.com/v2/models/food-item-recognition/outputs",
+        clarifaiReq,
+        { headers: { Authorization: `Key ${CLARIFAI_PAT}` } }
+      );
+
+      const concepts = clarifaiRes.data?.outputs?.[0]?.data?.concepts || [];
+      console.log("Clarifai concepts:", concepts.map(c=>({name:c.name, value:c.value})).slice(0,10));
+
+      clarifaiCandidates = concepts
+        .filter((c) => c.value >= 0.55) // confidence threshold
+        .map((c) => c.name.toLowerCase())
+        .filter((name) => !BLOCKLIST.has(name))
+        .filter((name) => {
+          // allow if in whitelist OR simple ingredient-like term
+          return (
+            INGREDIENT_WHITELIST.has(name) ||
+            (name.split(" ").length <= 3 && /^[a-z\s]+$/i.test(name))
+          );
+        })
+        .map((name) => ({
+          name,
+          score: 0.9,
+          source: "clarifai"
+        }));
+
+      // If none detected at 0.55, try a lower adaptive threshold (0.35)
+      if (clarifaiCandidates.length === 0 && concepts.length > 0) {
+        const lowThresh = concepts
+          .filter((c) => c.value >= 0.35)
+          .map((c) => c.name.toLowerCase())
+          .filter((name) => !BLOCKLIST.has(name))
+          .filter((name) => (
+            INGREDIENT_WHITELIST.has(name) || (name.split(" ").length <= 2 && /^[a-z\s]+$/i.test(name))
+          ))
+          .map((name) => ({ name, score: 0.7, source: "clarifai" }));
+        if (lowThresh.length > 0) {
+          console.log("✔ Clarifai adaptive threshold hit (0.35)", lowThresh);
+          clarifaiCandidates = lowThresh;
+        }
+      }
+
+    } catch (e) {
+      console.warn("Clarifai error:", e?.response?.data || e.message);
+    }
+
+    // 💡 If Clarifai returned results → stop here
+    if (clarifaiCandidates.length > 0) {
+      console.log("✔ Clarifai success:", clarifaiCandidates);
+      return res.json({ candidates: clarifaiCandidates });
+    }
+
+    // -------------------------------------------------------------------
+    // ⭐ Google Vision Fallback — LABEL DETECTION (for raw ingredients)
+    // -------------------------------------------------------------------
+    if (GKEY) {
+      console.log("🔄 Using Google Vision fallback");
+
+      const body = {
+        requests: [
+          {
+            image: base64raw
+              ? { content: base64raw }
+              : { source: { imageUri: imageUrl } },
+            features: [{ type: "LABEL_DETECTION", maxResults: 20 }]
+          }
+        ]
+      };
+
+      const vision = await axios.post(
+        `https://vision.googleapis.com/v1/images:annotate?key=${GKEY}`,
+        body
+      );
+
+      const anns = vision?.data?.responses?.[0]?.labelAnnotations || [];
+
+      const seen = new Set();
+
+      const visionCandidates = anns
+        .map((a) => a.description?.toLowerCase())
+        .filter((name) => name && !seen.has(name) && seen.add(name))
+        .filter((name) => !BLOCKLIST.has(name))
+        .map((name) => ({
+          name,
+          score: 0.6,
+          source: "vision-label"
+        }));
+
+      if (visionCandidates.length > 0) {
+        console.log("✔ Vision fallback success");
+        return res.json({ candidates: visionCandidates });
+      }
+    }
+
+    // -------------------------------------------------------------------
+    // ⭐ OCR FALLBACK (for packaged food ingredients list)
+    // -------------------------------------------------------------------
+    console.log("🔄 Using OCR fallback");
+
+    if (!GKEY) return res.json({ candidates: [] });
+
+    const ocrBody = {
+      requests: [
+        {
+          image: base64raw
+            ? { content: base64raw }
+            : { source: { imageUri: imageUrl } },
+          features: [{ type: "TEXT_DETECTION" }]
+        }
+      ]
+    };
+
+    const ocrResp = await axios.post(
+      `https://vision.googleapis.com/v1/images:annotate?key=${GKEY}`,
+      ocrBody
+    );
+
+    const text = ocrResp?.data?.responses?.[0]?.fullTextAnnotation?.text || "";
+    if (!text) return res.json({ candidates: [] });
+
+    const lines = text
+      .split(/\r?\n|,|;|\*/g)
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean);
+
+    const ocrCandidates = [];
+    for (const line of lines) {
+      for (const word of line.split(/\s+/)) {
+        if (INGREDIENT_WHITELIST.has(word)) {
+          ocrCandidates.push({
+            name: word,
+            score: 0.50,
+            source: "ocr"
           });
         }
       }
     }
-    if (extra.length) all.push(...extra);
 
-    // Merge duplicates (keep best-scoring or boxed)
-    const m = new Map();
-    for (const c of all) {
-      if (!c.name) continue;
-      const existing = m.get(c.name);
-      if (!existing) {
-        m.set(c.name, c);
-        continue;
-      }
+    return res.json({ candidates: ocrCandidates });
 
-      const hasBox = (cand) =>
-        !!(
-          cand &&
-          cand.boundingPoly &&
-          (cand.boundingPoly.normalizedVertices || cand.boundingPoly.vertices)
-        );
-      const cHasBox = hasBox(c);
-      const existingHasBox = hasBox(existing);
-
-      if (cHasBox && !existingHasBox) {
-        m.set(c.name, c);
-        continue;
-      }
-      if ((c.score || 0) > (existing.score || 0)) m.set(c.name, c);
-    }
-
-    // Weighted confidence
-    const weighted = Array.from(m.values()).map((c) => {
-      let s = c.score || 0;
-      if (c.source === "object") s += 0.2;
-      if (c.source === "label") s -= 0.05;
-      if (c.source === "text") s -= 0.15;
-      if (c.source === "webEntity") s -= 0.05;
-      return {
-        ...c,
-        score: Math.min(1, Math.max(0, s)),
-      };
-    });
-
-    // Dynamic confidence threshold
-    const scores = weighted.map((c) => c.score);
-    const avgScore = scores.reduce((a, b) => a + b, 0) / (scores.length || 1);
-    let minThreshold = 0.6;
-    if (avgScore < 0.6) minThreshold = 0.4;
-    if (avgScore > 0.85) minThreshold = 0.7;
-
-    // Filter out generic & low-confidence terms
-    let candidates = weighted.filter((c) => {
-      if (!c.name) return false;
-      if (IGNORE_WORDS.has(c.name)) return false;
-      if (/^\d+$/.test(c.name)) return false;
-      if (c.name.length < 2) return false;
-      if ((c.score || 0) < minThreshold) return false;
-      if (["meat", "fruit", "vegetable", "produce", "food"].includes(c.name))
-        return false;
-      return true;
-    });
-
-    candidates.sort((a, b) => (b.score || 0) - (a.score || 0));
-
-    // ✅ Return full info (with boundingPoly etc.) so "Learn" works
-    return res.json({
-      candidates,
-      debug: { avgScore, threshold: minThreshold },
-    });
-  } catch (err) {
-    console.error("❌ Vision API Error:", err);
-    res
-      .status(500)
-      .json({ error: "Failed to scan ingredients", details: String(err) });
+  } catch (error) {
+    console.error("Scanner error:", error);
+    return res.status(500).json({ error: "Internal scanner error" });
   }
 });
 

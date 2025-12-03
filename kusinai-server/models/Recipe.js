@@ -30,17 +30,20 @@ const commentSchema = new mongoose.Schema({
 const recipeSchema = new mongoose.Schema({
   title: String,
   region: String,
+
+  // ⭐ ADDED: Automatic extraction ingredients
   ingredients: [String],
+
+  // ⭐ ADDED: Automatic extraction steps
   steps: [String],
+
   nutrition: {
     calories: { type: Number, default: 0 },
     protein: { type: Number, default: 0 },
     fat: { type: Number, default: 0 },
     carbs: { type: Number, default: 0 },
-    // per-serving breakdown and serving count
     servings: { type: Number, default: 1 },
     servingSize: { type: String, default: "" },
-    // whether the servings value was estimated by the nutrition calculator
     estimatedServings: { type: Boolean, default: false },
     perServing: {
       calories: { type: Number, default: 0 },
@@ -49,10 +52,29 @@ const recipeSchema = new mongoose.Schema({
       carbs: { type: Number, default: 0 }
     }
   },
+
   substitutions: [String],
   method: String,
   image: String,
+
   comments: [commentSchema],
+
+  // ---------------------------------------------
+  // ⭐ NEW FIELDS FOR RECIPE AUTO-IMPORT SYSTEM
+  // ---------------------------------------------
+
+  // 🔗 Original page URL (required for imported recipes)
+  sourceUrl: { type: String, default: null },
+
+  // 🧑‍🍳 Website name, e.g. "Panlasang Pinoy"
+  sourceName: { type: String, default: null },
+
+  // 🆔 Used to detect if the source page changed
+  checksum: { type: String, default: null },
+
+  // 📅 Timestamp of last import/update from URL
+  lastImportedAt: { type: Date, default: null },
+
 }, { timestamps: true });
 
 const Recipe = mongoose.model("Recipe", recipeSchema);

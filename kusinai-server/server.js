@@ -26,6 +26,8 @@ import adminRoutes from "./routes/admin.js";
 import feedbackRoutes from "./routes/feedback.js";
 import testEmailRoutes from "./routes/testEmail.js";
 import nutritionRoutes from "./routes/nutritionRoutes.js";
+import importRoutes from "./routes/import.js";
+import cronRoutes from "./routes/cron.js";
 
 const app = express();
 
@@ -33,6 +35,18 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
+// ✅ Static uploads for scanner to host temporary images (for Spoonacular imageUrl)
+try {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const uploadsPath = path.join(__dirname, "uploads");
+  if (!fs.existsSync(uploadsPath)) fs.mkdirSync(uploadsPath, { recursive: true });
+  app.use("/uploads", express.static(uploadsPath));
+  console.log("📂 Serving uploads from:", uploadsPath);
+} catch (e) {
+  console.warn("⚠️ Unable to initialize uploads static route:", e?.message || e);
+}
 
 // ✅ API Routes
 app.use("/api/user", userRoutes);
@@ -44,6 +58,8 @@ app.use("/api/scanner", scannerRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/test-email", testEmailRoutes);
+app.use("/api/import", importRoutes);
+app.use("/api/cron", cronRoutes);
 
 // ✅ MongoDB connection
 mongoose

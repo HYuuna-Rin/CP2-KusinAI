@@ -1,3 +1,14 @@
+/**
+ * File: src/components/ui/input.jsx
+ * Purpose: Standardized text input with consistent focus ring and disabled states.
+ * Responsibilities:
+ *   - Render a forwardRef <input> supporting external form libraries or manual focus.
+ *   - Apply shared styling (height, padding, border, focus accessibility).
+ * Notes:
+ *   - Pure UI; does not manage value or validation internally.
+ *   - Tailwind classes reference primary color for focus outline.
+ *   - Unaffected by Spoonacular removal.
+ */
 import * as React from "react";
 import { cn } from "../../lib/utils";
 

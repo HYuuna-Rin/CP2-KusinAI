@@ -1,3 +1,14 @@
+/**
+ * File: src/components/ui/loading.jsx
+ * Purpose: Full-screen loading overlay for async operations providing user feedback.
+ * Responsibilities:
+ *   - Dim background and present a spinner with optional text.
+ *   - Maintain visual hierarchy using z-index and backdrop blur.
+ * Notes:
+ *   - Spinner uses Tailwind animation; can be swapped for system indicator later.
+ *   - Non-blocking pattern; parent controls conditional render.
+ *   - Unaffected by Spoonacular removal or portal needs (already fixed positioning).
+ */
 import React from "react";
 
 export default function LoadingOverlay({ text = "Loading..." }) {

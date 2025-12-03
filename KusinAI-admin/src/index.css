@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --z-modal: 1000;
+}
+
+body { @apply bg-surface text-text; }

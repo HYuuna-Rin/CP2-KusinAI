@@ -1,3 +1,15 @@
+/**
+ * File: src/components/ui/button.jsx
+ * Purpose: Reusable button component providing consistent styling, sizing, and variant color logic.
+ * Responsibilities:
+ *   - Render a semantic <button> with shared base classes.
+ *   - Support style variants (primary, secondary, outline, ghost, link) and size options.
+ *   - Forward ref for integration with parent focus or measurement logic.
+ * Notes:
+ *   - Uses Tailwind utility classes aligned with the design tokens (primary, accent, leaf, text, surface).
+ *   - Unaffected by Spoonacular removal; purely presentational.
+ *   - Keeps API minimal: variant, size, className, and native button props.
+ */
 import * as React from "react";
 import { cn } from "../../lib/utils";
 
